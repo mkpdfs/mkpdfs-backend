@@ -4,7 +4,7 @@ export default {
     {
       cognitoUserPool: {
         pool: 'CognitoUserPool',
-        trigger: 'PostConfirmation',
+        trigger: 'PostConfirmation' as const,
         existing: true
       }
     }

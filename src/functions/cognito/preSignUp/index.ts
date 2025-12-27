@@ -4,7 +4,7 @@ export default {
     {
       cognitoUserPool: {
         pool: 'CognitoUserPool',
-        trigger: 'PreSignUp',
+        trigger: 'PreSignUp' as const,
         existing: true
       }
     }
