@@ -40,10 +40,6 @@ export const cognitoResources = {
             Priority: 1
           }
         ]
-      },
-      LambdaConfig: {
-        PreSignUp: { 'Fn::GetAtt': ['PreSignUpLambdaFunction', 'Arn'] },
-        PostConfirmation: { 'Fn::GetAtt': ['PostConfirmationLambdaFunction', 'Arn'] }
       }
     }
   },
@@ -200,27 +196,6 @@ export const cognitoResources = {
           }
         }
       ]
-    }
-  },
-
-  // Lambda permissions for Cognito triggers
-  PreSignUpLambdaPermission: {
-    Type: 'AWS::Lambda::Permission',
-    Properties: {
-      FunctionName: { 'Fn::GetAtt': ['PreSignUpLambdaFunction', 'Arn'] },
-      Action: 'lambda:InvokeFunction',
-      Principal: 'cognito-idp.amazonaws.com',
-      SourceArn: { 'Fn::GetAtt': ['CognitoUserPool', 'Arn'] }
-    }
-  },
-
-  PostConfirmationLambdaPermission: {
-    Type: 'AWS::Lambda::Permission',
-    Properties: {
-      FunctionName: { 'Fn::GetAtt': ['PostConfirmationLambdaFunction', 'Arn'] },
-      Action: 'lambda:InvokeFunction',
-      Principal: 'cognito-idp.amazonaws.com',
-      SourceArn: { 'Fn::GetAtt': ['CognitoUserPool', 'Arn'] }
     }
   }
 };
