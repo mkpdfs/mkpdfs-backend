@@ -163,11 +163,6 @@ export const cognitoResources = {
             },
             Action: 'sts:AssumeRoleWithWebIdentity',
             Condition: {
-              StringEquals: {
-                'cognito-identity.amazonaws.com:aud': {
-                  Ref: 'CognitoIdentityPool'
-                }
-              },
               'ForAnyValue:StringLike': {
                 'cognito-identity.amazonaws.com:amr': 'authenticated'
               }
