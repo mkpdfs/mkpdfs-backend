@@ -8,7 +8,7 @@ import { cloudFrontDistribution } from '@resources/cloudfront';
 
 const serverlessConfiguration: AWS = {
   service: 'templify-api',
-  frameworkVersion: '3',
+  frameworkVersion: '4',
   plugins: [
     'serverless-esbuild',
     'serverless-offline'
