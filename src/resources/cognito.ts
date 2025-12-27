@@ -40,12 +40,46 @@ export const cognitoResources = {
             Priority: 1
           }
         ]
+      },
+      // Lambda triggers for Google OAuth
+      LambdaConfig: {
+        PreSignUp: { 'Fn::GetAtt': ['PreSignUpLambdaFunction', 'Arn'] },
+        PostConfirmation: { 'Fn::GetAtt': ['PostConfirmationLambdaFunction', 'Arn'] }
+      }
+    }
+  },
+
+  // User Pool Domain (required for OAuth hosted UI)
+  CognitoUserPoolDomain: {
+    Type: 'AWS::Cognito::UserPoolDomain',
+    Properties: {
+      Domain: 'templify-${self:provider.stage}',
+      UserPoolId: { Ref: 'CognitoUserPool' }
+    }
+  },
+
+  // Google Identity Provider
+  CognitoUserPoolIdentityProviderGoogle: {
+    Type: 'AWS::Cognito::UserPoolIdentityProvider',
+    Properties: {
+      UserPoolId: { Ref: 'CognitoUserPool' },
+      ProviderName: 'Google',
+      ProviderType: 'Google',
+      ProviderDetails: {
+        client_id: '{{resolve:ssm:/templify/${self:provider.stage}/google-oauth/client-id}}',
+        client_secret: '{{resolve:ssm-secure:/templify/${self:provider.stage}/google-oauth/client-secret}}',
+        authorize_scopes: 'openid email profile'
+      },
+      AttributeMapping: {
+        email: 'email',
+        name: 'name'
       }
     }
   },
 
   CognitoUserPoolClient: {
     Type: 'AWS::Cognito::UserPoolClient',
+    DependsOn: 'CognitoUserPoolIdentityProviderGoogle',
     Properties: {
       ClientName: 'templify-${self:provider.stage}-web-client',
       UserPoolId: {
@@ -58,7 +92,7 @@ export const cognitoResources = {
       ],
       GenerateSecret: false,
       PreventUserExistenceErrors: 'ENABLED',
-      SupportedIdentityProviders: ['COGNITO'],
+      SupportedIdentityProviders: ['COGNITO', 'Google'],
       AllowedOAuthFlows: ['code'],
       AllowedOAuthScopes: ['openid', 'email', 'profile', 'aws.cognito.signin.user.admin'],
       AllowedOAuthFlowsUserPoolClient: true,
@@ -183,6 +217,27 @@ export const cognitoResources = {
           }
         }
       ]
+    }
+  },
+
+  // Lambda Permissions for Cognito Triggers
+  PreSignUpLambdaPermission: {
+    Type: 'AWS::Lambda::Permission',
+    Properties: {
+      FunctionName: { 'Fn::GetAtt': ['PreSignUpLambdaFunction', 'Arn'] },
+      Action: 'lambda:InvokeFunction',
+      Principal: 'cognito-idp.amazonaws.com',
+      SourceArn: { 'Fn::GetAtt': ['CognitoUserPool', 'Arn'] }
+    }
+  },
+
+  PostConfirmationLambdaPermission: {
+    Type: 'AWS::Lambda::Permission',
+    Properties: {
+      FunctionName: { 'Fn::GetAtt': ['PostConfirmationLambdaFunction', 'Arn'] },
+      Action: 'lambda:InvokeFunction',
+      Principal: 'cognito-idp.amazonaws.com',
+      SourceArn: { 'Fn::GetAtt': ['CognitoUserPool', 'Arn'] }
     }
   }
 };

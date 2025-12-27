@@ -14,3 +14,7 @@ export { default as deleteTemplate } from './templates/deleteTemplate';
 // PDF generation functions (Dual auth)
 export { default as generatePdf } from './pdf/generate';
 export { default as generatePdfAsync } from './pdf/generateAsync';
+
+// Cognito trigger functions (triggered by Cognito, not HTTP)
+export { default as preSignUp } from './cognito/preSignUp';
+export { default as postConfirmation } from './cognito/postConfirmation';
