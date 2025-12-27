@@ -79,7 +79,7 @@ export const cognitoResources = {
 
   CognitoUserPoolClient: {
     Type: 'AWS::Cognito::UserPoolClient',
-    DependsOn: 'CognitoUserPoolIdentityProviderGoogle',
+    DependsOn: ['CognitoUserPoolIdentityProviderGoogle'],
     Properties: {
       ClientName: 'templify-${self:provider.stage}-web-client',
       UserPoolId: {
