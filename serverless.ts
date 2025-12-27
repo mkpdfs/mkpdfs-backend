@@ -18,7 +18,7 @@ const serverlessConfiguration: AWS = {
     runtime: 'nodejs20.x',
     stage: '${opt:stage, "dev"}',
     region: 'us-east-1',
-    profile: 'rocketeast',
+    // Profile removed - use AWS_PROFILE env var for local dev, OIDC for CI/CD
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
@@ -41,8 +41,8 @@ const serverlessConfiguration: AWS = {
       USER_POOL_CLIENT_ID: { Ref: 'CognitoUserPoolClient' },
       IDENTITY_POOL_ID: { Ref: 'CognitoIdentityPool' },
       
-      // Email settings (you'll need to update these)
-      FROM_EMAIL: 'noreply@templify.com',
+      // Email settings
+      FROM_EMAIL: 'noreply@templifying.com',
       
       // Offline settings
       IS_OFFLINE: '${env:IS_OFFLINE, "false"}',
