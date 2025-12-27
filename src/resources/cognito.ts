@@ -62,7 +62,7 @@ export const cognitoResources = {
       ProviderType: 'Google',
       ProviderDetails: {
         client_id: '{{resolve:ssm:/templify/${self:provider.stage}/google-oauth/client-id}}',
-        client_secret: '{{resolve:ssm-secure:/templify/${self:provider.stage}/google-oauth/client-secret}}',
+        client_secret: '{{resolve:ssm:/templify/${self:provider.stage}/google-oauth/client-secret}}',
         authorize_scopes: 'openid email profile'
       },
       AttributeMapping: {
