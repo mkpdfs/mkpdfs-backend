@@ -31,10 +31,6 @@ export const dynamoDbTables = {
           ],
           Projection: {
             ProjectionType: 'ALL'
-          },
-          ProvisionedThroughput: {
-            ReadCapacityUnits: 1,
-            WriteCapacityUnits: 1
           }
         }
       ],
@@ -80,10 +76,6 @@ export const dynamoDbTables = {
           ],
           Projection: {
             ProjectionType: 'ALL'
-          },
-          ProvisionedThroughput: {
-            ReadCapacityUnits: 1,
-            WriteCapacityUnits: 1
           }
         }
       ],
