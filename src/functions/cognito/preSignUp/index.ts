@@ -3,10 +3,9 @@ export default {
   events: [
     {
       cognitoUserPool: {
-        pool: 'templify-${self:provider.stage}-user-pool',
+        pool: 'mkpdfs-${self:provider.stage}-user-pool',
         trigger: 'PreSignUp' as const,
-        existing: true,
-        forceDeploy: true
+        existing: false
       }
     }
   ]

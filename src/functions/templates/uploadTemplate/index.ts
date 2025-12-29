@@ -4,7 +4,7 @@ export default {
     {
       http: {
         method: 'post',
-        path: 'templates',
+        path: 'templates/upload',
         authorizer: 'aws_iam',
         cors: true
       }

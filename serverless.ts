@@ -35,7 +35,7 @@ const serverlessConfiguration: AWS = {
       TEMPLATES_TABLE: 'mkpdfs-${self:provider.stage}-templates',
 
       // S3 buckets
-      ASSETS_BUCKET: 'mkpdfs-${self:provider.stage}-assets',
+      ASSETS_BUCKET: 'mkpdfs-${self:provider.stage}-bucket',
       
       // Cognito
       USER_POOL_ID: { Ref: 'CognitoUserPool' },
@@ -78,8 +78,8 @@ const serverlessConfiguration: AWS = {
               's3:ListBucket'
             ],
             Resource: [
-              'arn:aws:s3:::mkpdfs-${self:provider.stage}-assets',
-              'arn:aws:s3:::mkpdfs-${self:provider.stage}-assets/*'
+              'arn:aws:s3:::mkpdfs-${self:provider.stage}-bucket',
+              'arn:aws:s3:::mkpdfs-${self:provider.stage}-bucket/*'
             ]
           },
           {
@@ -119,8 +119,8 @@ const serverlessConfiguration: AWS = {
       concurrency: 10,
     },
     'serverless-offline': {
-      httpPort: 3001,
-      lambdaPort: 3002,
+      httpPort: 4001,
+      lambdaPort: 4002,
     },
     customDomain: {
       domainName: '${self:custom.domainNames.${self:provider.stage}}',

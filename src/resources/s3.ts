@@ -1,8 +1,10 @@
 export const s3Buckets = {
   AssetsBucket: {
     Type: 'AWS::S3::Bucket',
+    DeletionPolicy: 'Retain',
+    UpdateReplacePolicy: 'Retain',
     Properties: {
-      BucketName: 'mkpdfs-${self:provider.stage}-assets',
+      BucketName: 'mkpdfs-${self:provider.stage}-bucket',
       BucketEncryption: {
         ServerSideEncryptionConfiguration: [
           {

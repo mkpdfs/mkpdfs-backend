@@ -3,14 +3,13 @@ export default {
   events: [
     {
       cognitoUserPool: {
-        pool: 'templify-${self:provider.stage}-user-pool',
+        pool: 'mkpdfs-${self:provider.stage}-user-pool',
         trigger: 'PostConfirmation' as const,
-        existing: true,
-        forceDeploy: true
+        existing: false
       }
     }
   ],
   environment: {
-    USERS_TABLE: 'templify-${self:provider.stage}-users'
+    USERS_TABLE: 'mkpdfs-${self:provider.stage}-users'
   }
 };
