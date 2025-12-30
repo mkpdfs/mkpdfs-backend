@@ -62,7 +62,11 @@ npm run deploy:prod
 
 ### PDF Generation (Dual auth - AWS_IAM or API token)
 - `POST /pdf/generate` - Generate PDF synchronously
-- `POST /pdf/generate-async` - Generate PDF asynchronously
+- `POST /pdf/generate-async` - Generate PDF asynchronously (legacy)
+
+### Async Job API (Dual auth - AWS_IAM or API token)
+- `POST /jobs/submit` - Submit async PDF generation job
+- `GET /jobs/{jobId}` - Get job status
 
 ## Authentication
 
@@ -92,6 +96,120 @@ curl -X POST https://apis.mkpdfs.com/pdf/generate \
     "sendEmail": ["customer@example.com"]
   }'
 ```
+
+## Async PDF Generation (Job API)
+
+For large or complex PDFs that may timeout with synchronous generation, use the async job API. Jobs are processed via SQS with automatic retries and optional webhook notifications.
+
+### Submit a Job
+
+```bash
+curl -X POST https://apis.mkpdfs.com/jobs/submit \
+  -H "X-Api-Key: tlfy_your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateId": "invoice-001",
+    "data": { "customerName": "John Doe", "amount": 100.00 },
+    "webhookUrl": "https://your-server.com/webhook",
+    "webhookSecret": "your-secret-for-signature-verification"
+  }'
+```
+
+**Response (202 Accepted):**
+```json
+{
+  "success": true,
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "pending",
+  "statusUrl": "https://apis.mkpdfs.com/jobs/550e8400-e29b-41d4-a716-446655440000",
+  "pageCount": 1,
+  "message": "PDF generation job submitted successfully"
+}
+```
+
+### Check Job Status
+
+```bash
+curl https://apis.mkpdfs.com/jobs/{jobId} \
+  -H "X-Api-Key: tlfy_your_token_here"
+```
+
+**Response (completed):**
+```json
+{
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "templateId": "invoice-001",
+  "pageCount": 1,
+  "pdfUrl": "https://...",
+  "sizeBytes": 125000,
+  "createdAt": "2025-01-15T10:00:00.000Z",
+  "completedAt": "2025-01-15T10:00:30.000Z",
+  "expiresIn": "5 days"
+}
+```
+
+**Job Statuses:**
+- `pending` - Job queued, waiting to be processed
+- `processing` - PDF generation in progress
+- `completed` - PDF ready, `pdfUrl` available
+- `failed` - Generation failed, `error` and `errorCode` available
+
+### Webhook Notifications
+
+If `webhookUrl` is provided, a POST request is sent on job completion or failure.
+
+**Webhook Payload:**
+```json
+{
+  "event": "job.completed",
+  "timestamp": "2025-01-15T10:00:30.000Z",
+  "data": {
+    "jobId": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "completed",
+    "pdfUrl": "https://...",
+    "pageCount": 1,
+    "sizeBytes": 125000,
+    "createdAt": "2025-01-15T10:00:00.000Z",
+    "completedAt": "2025-01-15T10:00:30.000Z"
+  }
+}
+```
+
+**Webhook Headers:**
+- `X-Mkpdfs-Event`: `job.completed` or `job.failed`
+- `X-Mkpdfs-Timestamp`: Unix timestamp
+- `X-Mkpdfs-Signature`: `sha256=<HMAC-SHA256>` (if `webhookSecret` provided)
+
+**Verifying Webhook Signatures (Node.js):**
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, timestamp, secret) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(`${timestamp}.${payload}`)
+    .digest('hex');
+  return signature === `sha256=${expected}`;
+}
+
+// Usage
+const isValid = verifyWebhook(
+  req.body,                           // raw body string
+  req.headers['x-mkpdfs-signature'],
+  req.headers['x-mkpdfs-timestamp'],
+  'your-webhook-secret'
+);
+```
+
+**Webhook Retry Policy:**
+- 3 attempts with exponential backoff (1s, 2s, 4s)
+- Webhook failures don't affect job status
+- Check `webhookStatus` in job response: `pending`, `delivered`, or `failed`
+
+### Job Retention
+
+Jobs are automatically deleted 7 days after completion via DynamoDB TTL.
 
 ## Subscription Tiers
 

@@ -63,8 +63,13 @@ cd layers/puppeteer && npm install && cd ../..
 - `deleteTemplate`: Removes template
 
 #### PDF Generation (Dual auth)
-- `generatePdf`: Sync/async PDF generation endpoint
-- `generatePdfAsync`: Async processor invoked by generatePdf
+- `generatePdf`: Sync PDF generation endpoint
+- `generatePdfAsync`: Legacy async processor (deprecated)
+
+#### Async Job API (Dual auth)
+- `submitJob`: Submit async PDF job, returns jobId immediately
+- `processJob`: SQS consumer that processes PDF generation
+- `getJobStatus`: Get job status by jobId
 
 ### Core Services and Patterns
 
@@ -148,6 +153,28 @@ cd layers/puppeteer && npm install && cd ../..
   s3Key: string,
   createdAt: string
 }
+
+// Jobs Table (async PDF generation)
+{
+  jobId: string,       // PK (UUID)
+  userId: string,      // GSI (userId-createdAt-index)
+  status: 'pending' | 'processing' | 'completed' | 'failed',
+  templateId: string,
+  data: object,        // Template data for processing
+  webhookUrl?: string,
+  webhookSecret?: string,
+  pdfUrl?: string,     // Set on completion
+  pdfKey?: string,
+  pageCount: number,
+  sizeBytes?: number,
+  error?: string,
+  errorCode?: string,
+  webhookStatus?: 'pending' | 'delivered' | 'failed',
+  webhookAttempts: number,
+  createdAt: string,
+  completedAt?: string,
+  ttl: number          // Auto-delete 7 days after completion
+}
 ```
 
 ### Important Implementation Details
@@ -157,7 +184,7 @@ cd layers/puppeteer && npm install && cd ../..
 - Stored as SHA256 hash in DynamoDB
 - Support optional expiration dates
 
-#### PDF Generation Flow
+#### PDF Generation Flow (Sync)
 1. Validate user authentication and subscription
 2. Retrieve template from S3 (`users/{userId}/templates/{templateId}`)
 3. Compile with Handlebars and provided data
@@ -165,6 +192,44 @@ cd layers/puppeteer && npm install && cd ../..
 5. Upload to S3 (`users/{userId}/pdfs/{pdfId}.pdf`)
 6. Generate pre-signed URL (5-day expiry)
 7. Optionally send email with attachment or link (based on size)
+
+#### Async Job Flow
+For large PDFs that may timeout, use the job-based async API:
+
+1. **Submit** (`POST /jobs/submit`):
+   - Validate request and webhook URL
+   - Create job record in DynamoDB (status: `pending`)
+   - Send message to SQS queue
+   - Return jobId immediately (202 Accepted)
+
+2. **Process** (SQS consumer):
+   - Update job status to `processing`
+   - Generate PDF using PdfService
+   - Update job with pdfUrl, sizeBytes (status: `completed`)
+   - Track usage (only on success)
+   - Send webhook if configured (3 retries with exponential backoff)
+
+3. **Poll** (`GET /jobs/{jobId}`):
+   - Return job status and result
+   - Only owner can access their jobs
+
+**Key Files:**
+- `src/functions/jobs/submit/handler.ts` - Job submission
+- `src/functions/jobs/process/handler.ts` - SQS consumer
+- `src/functions/jobs/getStatus/handler.ts` - Status endpoint
+- `src/libs/services/webhookService.ts` - Webhook delivery with retry
+- `src/resources/sqs.ts` - Queue definitions
+
+**SQS Configuration:**
+- Main queue: `mkpdfs-{stage}-pdf-generation`
+- Dead letter queue: `mkpdfs-{stage}-pdf-generation-dlq`
+- Visibility timeout: 6 minutes
+- Max receive count: 3 (then moves to DLQ)
+
+**Webhook Headers:**
+- `X-Mkpdfs-Event`: `job.completed` or `job.failed`
+- `X-Mkpdfs-Timestamp`: Unix timestamp
+- `X-Mkpdfs-Signature`: `sha256=<HMAC-SHA256>` (if secret provided)
 
 #### Environment Configuration
 - Serverless Framework automatically generates table names and bucket names
