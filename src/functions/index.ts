@@ -15,6 +15,11 @@ export { default as deleteTemplate } from './templates/deleteTemplate';
 export { default as generatePdf } from './pdf/generate';
 export { default as generatePdfAsync } from './pdf/generateAsync';
 
+// Async job functions (Dual auth)
+export { default as submitJob } from './jobs/submit';
+export { default as processJob } from './jobs/process';
+export { default as getJobStatus } from './jobs/getStatus';
+
 // Cognito trigger functions (no HTTP events, triggered by Cognito)
 export { default as preSignUp } from './cognito/preSignUp';
 export { default as postConfirmation } from './cognito/postConfirmation';

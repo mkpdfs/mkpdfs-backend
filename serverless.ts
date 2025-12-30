@@ -3,6 +3,7 @@ import type { AWS } from '@serverless/typescript';
 import * as functions from '@functions/index';
 import { dynamoDbTables } from '@resources/dynamodb';
 import { s3Buckets } from '@resources/s3';
+import { sqsQueues } from '@resources/sqs';
 import { cognitoResources } from '@resources/cognito';
 import { cloudFrontDistribution } from '@resources/cloudfront';
 import { apiGatewayResponses } from '@resources/apigateway';
@@ -35,6 +36,10 @@ const serverlessConfiguration: AWS = {
       SUBSCRIPTIONS_TABLE: 'mkpdfs-${self:provider.stage}-subscriptions',
       TEMPLATES_TABLE: 'mkpdfs-${self:provider.stage}-templates',
       MARKETPLACE_TABLE: 'mkpdfs-${self:provider.stage}-marketplace',
+      JOBS_TABLE: 'mkpdfs-${self:provider.stage}-jobs',
+
+      // SQS queues
+      PDF_GENERATION_QUEUE_URL: { Ref: 'PdfGenerationQueue' },
 
       // S3 buckets
       ASSETS_BUCKET: 'mkpdfs-${self:provider.stage}-bucket',
@@ -128,6 +133,19 @@ const serverlessConfiguration: AWS = {
               'arn:aws:bedrock:${self:provider.region}::foundation-model/anthropic.claude-3-sonnet-*',
               'arn:aws:bedrock:${self:provider.region}::foundation-model/anthropic.claude-3-haiku-*'
             ]
+          },
+          {
+            Effect: 'Allow',
+            Action: [
+              'sqs:SendMessage',
+              'sqs:ReceiveMessage',
+              'sqs:DeleteMessage',
+              'sqs:GetQueueAttributes'
+            ],
+            Resource: [
+              'arn:aws:sqs:${self:provider.region}:*:mkpdfs-${self:provider.stage}-pdf-generation',
+              'arn:aws:sqs:${self:provider.region}:*:mkpdfs-${self:provider.stage}-pdf-generation-dlq'
+            ]
           }
         ]
       }
@@ -185,6 +203,7 @@ const serverlessConfiguration: AWS = {
     Resources: {
       ...dynamoDbTables,
       ...s3Buckets,
+      ...sqsQueues,
       ...cognitoResources,
       ...cloudFrontDistribution,
       ...apiGatewayResponses,

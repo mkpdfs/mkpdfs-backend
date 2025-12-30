@@ -206,5 +206,56 @@ export const dynamoDbTables = {
       ],
       BillingMode: 'PAY_PER_REQUEST'
     }
+  },
+
+  // Jobs table - async PDF generation job tracking
+  JobsTable: {
+    Type: 'AWS::DynamoDB::Table',
+    Properties: {
+      TableName: 'mkpdfs-${self:provider.stage}-jobs',
+      AttributeDefinitions: [
+        {
+          AttributeName: 'jobId',
+          AttributeType: 'S'
+        },
+        {
+          AttributeName: 'userId',
+          AttributeType: 'S'
+        },
+        {
+          AttributeName: 'createdAt',
+          AttributeType: 'S'
+        }
+      ],
+      KeySchema: [
+        {
+          AttributeName: 'jobId',
+          KeyType: 'HASH'
+        }
+      ],
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'userId-createdAt-index',
+          KeySchema: [
+            {
+              AttributeName: 'userId',
+              KeyType: 'HASH'
+            },
+            {
+              AttributeName: 'createdAt',
+              KeyType: 'RANGE'
+            }
+          ],
+          Projection: {
+            ProjectionType: 'ALL'
+          }
+        }
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      TimeToLiveSpecification: {
+        AttributeName: 'ttl',
+        Enabled: true
+      }
+    }
   }
 };
