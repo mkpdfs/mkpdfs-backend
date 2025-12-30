@@ -128,25 +128,12 @@ export class PdfService {
   }
   
   private async generatePdfFromHtml(html: string): Promise<Buffer> {
-    let browser: Browser;
-
-    if (process.env.IS_OFFLINE === 'true') {
-      // Local development - use system Chromium
-      browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        executablePath: process.platform === 'darwin'
-          ? '/Applications/Chromium.app/Contents/MacOS/Chromium'
-          : 'chromium-browser',
-        headless: true
-      });
-    } else {
-      // Lambda - use @sparticuz/chromium from layer
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless
-      });
-    }
+    // Always use @sparticuz/chromium for consistent behavior across environments
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless
+    });
     
     try {
       const page = await browser.newPage();
