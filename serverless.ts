@@ -5,6 +5,7 @@ import { dynamoDbTables } from '@resources/dynamodb';
 import { s3Buckets } from '@resources/s3';
 import { cognitoResources } from '@resources/cognito';
 import { cloudFrontDistribution } from '@resources/cloudfront';
+import { apiGatewayResponses } from '@resources/apigateway';
 
 const serverlessConfiguration: AWS = {
   service: 'mkpdfs-api',
@@ -186,6 +187,7 @@ const serverlessConfiguration: AWS = {
       ...s3Buckets,
       ...cognitoResources,
       ...cloudFrontDistribution,
+      ...apiGatewayResponses,
     },
     Outputs: {
       UserPoolId: {
