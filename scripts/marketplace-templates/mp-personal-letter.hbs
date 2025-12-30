@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Georgia', serif; color: #333; padding: 60px; line-height: 1.8; }
+    .letter { max-width: 700px; margin: 0 auto; }
+    .sender-info { margin-bottom: 40px; }
+    .sender-info p { font-size: 14px; margin-bottom: 2px; }
+    .sender-contact { margin-top: 10px; font-size: 13px; color: #666; }
+    .date { margin-bottom: 40px; font-size: 14px; }
+    .recipient-info { margin-bottom: 40px; }
+    .recipient-info p { font-size: 14px; margin-bottom: 2px; }
+    .subject { margin-bottom: 30px; }
+    .subject p { font-size: 14px; }
+    .subject strong { font-weight: 600; }
+    .salutation { margin-bottom: 20px; font-size: 15px; }
+    .body { margin-bottom: 40px; }
+    .body p { font-size: 15px; margin-bottom: 20px; text-align: justify; }
+    .closing { margin-bottom: 60px; font-size: 15px; }
+    .signature { font-size: 16px; }
+    .signature-name { font-family: 'Brush Script MT', cursive; font-size: 28px; color: #1e40af; margin-bottom: 5px; }
+    .signature-printed { font-size: 15px; font-weight: 600; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 30px 0; }
+  </style>
+</head>
+<body>
+  <div class="letter">
+    <div class="sender-info">
+      <p><strong>{{senderName}}</strong></p>
+      <p>{{senderAddress}}</p>
+      <p>{{senderCity}}</p>
+      <div class="sender-contact">
+        <p>{{senderEmail}}</p>
+        <p>{{senderPhone}}</p>
+      </div>
+    </div>
+
+    <div class="date">
+      <p>{{date}}</p>
+    </div>
+
+    <div class="recipient-info">
+      <p><strong>{{recipientName}}</strong></p>
+      <p>{{recipientTitle}}</p>
+      <p>{{recipientCompany}}</p>
+      <p>{{recipientAddress}}</p>
+      <p>{{recipientCity}}</p>
+    </div>
+
+    <div class="subject">
+      <p><strong>Re: {{subject}}</strong></p>
+    </div>
+
+    <div class="salutation">
+      <p>{{salutation}},</p>
+    </div>
+
+    <div class="body">
+      {{#each body}}
+      <p>{{this}}</p>
+      {{/each}}
+    </div>
+
+    <div class="closing">
+      <p>{{closing}},</p>
+    </div>
+
+    <div class="signature">
+      <div class="signature-name">{{signature}}</div>
+      <div class="signature-printed">{{senderName}}</div>
+    </div>
+  </div>
+</body>
+</html>

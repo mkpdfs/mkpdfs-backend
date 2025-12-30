@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f9ff; padding: 40px; }
+    .certificate { background: white; max-width: 800px; margin: 0 auto; padding: 50px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+    .decoration { position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; opacity: 0.1; }
+    .decoration2 { position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; opacity: 0.1; }
+    .header { text-align: center; margin-bottom: 40px; position: relative; z-index: 1; }
+    .badge { display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 12px 30px; border-radius: 30px; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; }
+    .title { font-size: 36px; color: #1e3a8a; font-weight: 300; margin-bottom: 10px; }
+    .organizer { font-size: 16px; color: #3b82f6; font-weight: 500; }
+    .body { text-align: center; padding: 30px 0; position: relative; z-index: 1; }
+    .intro { font-size: 14px; color: #666; margin-bottom: 20px; }
+    .recipient { font-size: 42px; color: #1e3a8a; font-weight: 600; margin-bottom: 30px; }
+    .description { font-size: 16px; color: #333; line-height: 1.8; max-width: 500px; margin: 0 auto 30px; }
+    .event-card { display: inline-block; background: #f0f9ff; padding: 25px 40px; border-radius: 12px; border: 2px solid #bfdbfe; }
+    .event-name { font-size: 20px; color: #1e3a8a; font-weight: 600; margin-bottom: 10px; }
+    .event-details { font-size: 14px; color: #3b82f6; }
+    .event-details span { display: block; margin: 4px 0; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-top: 30px; border-top: 1px solid #e5e7eb; position: relative; z-index: 1; }
+    .signature { text-align: center; }
+    .signature-line { width: 150px; border-top: 2px solid #3b82f6; padding-top: 8px; }
+    .signature-name { font-size: 14px; font-weight: 500; color: #333; }
+    .signature-title { font-size: 11px; color: #666; }
+    .qr-placeholder { width: 80px; height: 80px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .qr-placeholder span { font-size: 10px; color: #999; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="certificate">
+    <div class="decoration"></div>
+    <div class="decoration2"></div>
+
+    <div class="header">
+      <div class="badge">Official Certificate</div>
+      <h1 class="title">{{title}}</h1>
+      <div class="organizer">{{organizerName}}</div>
+    </div>
+
+    <div class="body">
+      <div class="intro">This is to certify that</div>
+      <div class="recipient">{{recipientName}}</div>
+      <p class="description">{{description}}</p>
+
+      <div class="event-card">
+        <div class="event-name">{{eventName}}</div>
+        <div class="event-details">
+          <span>{{eventDate}}</span>
+          <span>{{eventLocation}}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="signature">
+        <div class="signature-line">
+          <div class="signature-name">Event Director</div>
+          <div class="signature-title">{{organizerName}}</div>
+        </div>
+      </div>
+      <div class="qr-placeholder">
+        <span>Verify Online</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; }
+    .flyer { max-width: 600px; margin: 0 auto; background: linear-gradient(180deg, #f97316 0%, #ea580c 50%, #c2410c 100%); min-height: 800px; position: relative; overflow: hidden; }
+    .decoration { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.1); }
+    .dec1 { top: -100px; right: -100px; }
+    .dec2 { bottom: -150px; left: -150px; width: 400px; height: 400px; }
+    .content { position: relative; z-index: 1; padding: 50px 40px; color: white; text-align: center; }
+    .event-type { font-size: 14px; text-transform: uppercase; letter-spacing: 4px; opacity: 0.9; margin-bottom: 20px; }
+    .title { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+    .subtitle { font-size: 20px; font-weight: 300; opacity: 0.9; margin-bottom: 40px; }
+    .date-box { display: inline-block; background: white; color: #ea580c; padding: 20px 40px; border-radius: 12px; margin-bottom: 30px; }
+    .date-box .date { font-size: 28px; font-weight: 700; }
+    .date-box .time { font-size: 16px; opacity: 0.8; margin-top: 5px; }
+    .venue { margin-bottom: 40px; }
+    .venue h3 { font-size: 16px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; margin-bottom: 10px; }
+    .venue p { font-size: 20px; font-weight: 500; }
+    .venue .address { font-size: 14px; opacity: 0.8; margin-top: 5px; }
+    .highlights { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 30px; margin-bottom: 40px; }
+    .highlights h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+    .highlights-list { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .highlights-list li { font-size: 16px; display: flex; align-items: center; gap: 10px; }
+    .highlights-list li::before { content: '★'; color: #fbbf24; }
+    .ticket-info { margin-bottom: 30px; }
+    .ticket-price { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+    .cta-button { display: inline-block; background: white; color: #ea580c; padding: 16px 50px; font-size: 18px; font-weight: 700; border-radius: 50px; text-decoration: none; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .website { margin-top: 30px; font-size: 18px; opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="flyer">
+    <div class="decoration dec1"></div>
+    <div class="decoration dec2"></div>
+
+    <div class="content">
+      <div class="event-type">Don't Miss Out!</div>
+      <h1 class="title">{{eventTitle}}</h1>
+      <div class="subtitle">{{eventSubtitle}}</div>
+
+      <div class="date-box">
+        <div class="date">{{date}}</div>
+        <div class="time">{{time}}</div>
+      </div>
+
+      <div class="venue">
+        <h3>Location</h3>
+        <p>{{venue}}</p>
+        <p class="address">{{address}}</p>
+      </div>
+
+      <div class="highlights">
+        <h3>What to Expect</h3>
+        <ul class="highlights-list">
+          {{#each highlights}}
+          <li>{{this}}</li>
+          {{/each}}
+        </ul>
+      </div>
+
+      <div class="ticket-info">
+        <div class="ticket-price">{{ticketPrice}}</div>
+        <a href="#" class="cta-button">{{ctaText}}</a>
+      </div>
+
+      <div class="website">{{website}}</div>
+    </div>
+  </div>
+</body>
+</html>

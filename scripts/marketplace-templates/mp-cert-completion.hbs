@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Georgia', serif; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 40px; min-height: 100vh; }
+    .certificate { background: white; max-width: 800px; margin: 0 auto; padding: 60px; border: 8px double #d97706; position: relative; }
+    .certificate::before { content: ''; position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 2px solid #fbbf24; pointer-events: none; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .organization { font-size: 14px; text-transform: uppercase; letter-spacing: 4px; color: #92400e; margin-bottom: 20px; }
+    .title { font-size: 42px; color: #78350f; font-weight: normal; margin-bottom: 10px; font-style: italic; }
+    .subtitle { font-size: 16px; color: #92400e; letter-spacing: 2px; }
+    .body { text-align: center; margin-bottom: 40px; }
+    .presented { font-size: 14px; color: #666; margin-bottom: 20px; }
+    .recipient { font-size: 36px; color: #78350f; font-family: 'Brush Script MT', cursive; margin-bottom: 30px; padding-bottom: 10px; border-bottom: 2px solid #fbbf24; display: inline-block; }
+    .description { font-size: 16px; color: #333; line-height: 1.8; max-width: 600px; margin: 0 auto; }
+    .course-name { font-weight: bold; color: #78350f; }
+    .details { display: flex; justify-content: center; gap: 60px; margin: 40px 0; }
+    .detail-item { text-align: center; }
+    .detail-item label { display: block; font-size: 11px; text-transform: uppercase; color: #666; margin-bottom: 4px; }
+    .detail-item span { font-size: 14px; color: #333; }
+    .signatures { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 20px; }
+    .signature { text-align: center; width: 200px; }
+    .signature-line { border-top: 1px solid #333; padding-top: 8px; margin-top: 40px; }
+    .signature-name { font-size: 16px; font-style: italic; }
+    .signature-title { font-size: 11px; color: #666; text-transform: uppercase; }
+    .certificate-id { position: absolute; bottom: 30px; right: 40px; font-size: 10px; color: #999; }
+    .seal { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border: 3px solid #d97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .seal span { font-size: 10px; text-transform: uppercase; text-align: center; color: #92400e; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="certificate">
+    <div class="header">
+      <div class="organization">{{organizationName}}</div>
+      <h1 class="title">{{title}}</h1>
+      <div class="subtitle">This is to certify that</div>
+    </div>
+
+    <div class="body">
+      <div class="recipient">{{recipientName}}</div>
+      <p class="description">
+        has successfully completed the <span class="course-name">{{courseName}}</span>
+        training program consisting of {{courseHours}} hours of instruction and has
+        demonstrated proficiency in all required competencies.
+      </p>
+    </div>
+
+    <div class="details">
+      <div class="detail-item">
+        <label>Date of Completion</label>
+        <span>{{completionDate}}</span>
+      </div>
+      <div class="detail-item">
+        <label>Course Hours</label>
+        <span>{{courseHours}} Hours</span>
+      </div>
+    </div>
+
+    <div class="seal">
+      <span>Official Seal</span>
+    </div>
+
+    <div class="signatures">
+      <div class="signature">
+        <div class="signature-line">
+          <div class="signature-name">{{instructorName}}</div>
+          <div class="signature-title">Instructor</div>
+        </div>
+      </div>
+      <div class="signature">
+        <div class="signature-line">
+          <div class="signature-name">Program Director</div>
+          <div class="signature-title">{{organizationName}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="certificate-id">Certificate ID: {{certificateId}}</div>
+  </div>
+</body>
+</html>

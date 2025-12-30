@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f3f4f6; padding: 20px; }
+    .newsletter { max-width: 600px; margin: 0 auto; background: white; }
+    .header { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { font-size: 28px; margin-bottom: 5px; }
+    .header .meta { font-size: 12px; opacity: 0.8; }
+    .greeting { padding: 30px; border-bottom: 1px solid #e5e7eb; }
+    .greeting h2 { font-size: 22px; color: #333; margin-bottom: 15px; }
+    .greeting p { font-size: 15px; color: #666; line-height: 1.6; }
+    .articles { padding: 30px; }
+    .articles h3 { font-size: 14px; color: #0ea5e9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+    .article { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #e5e7eb; }
+    .article:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .article h4 { font-size: 18px; color: #333; margin-bottom: 10px; }
+    .article p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 15px; }
+    .article a { display: inline-block; color: #0ea5e9; font-size: 14px; font-weight: 600; text-decoration: none; }
+    .article a:hover { text-decoration: underline; }
+    .cta-section { background: #f0f9ff; padding: 30px; text-align: center; margin: 0 30px 30px; border-radius: 12px; border: 2px solid #bae6fd; }
+    .cta-section h3 { font-size: 20px; color: #0369a1; margin-bottom: 10px; }
+    .cta-section p { font-size: 14px; color: #666; margin-bottom: 20px; }
+    .cta-button { display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; font-size: 14px; font-weight: 600; border-radius: 6px; text-decoration: none; }
+    .footer { background: #1e293b; color: white; padding: 30px; text-align: center; }
+    .footer p { font-size: 12px; opacity: 0.7; margin-bottom: 15px; }
+    .social-links { display: flex; justify-content: center; gap: 15px; }
+    .social-links a { display: inline-block; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 50%; line-height: 36px; color: white; text-decoration: none; font-size: 14px; }
+    .unsubscribe { margin-top: 20px; font-size: 11px; opacity: 0.5; }
+    .unsubscribe a { color: white; }
+  </style>
+</head>
+<body>
+  <div class="newsletter">
+    <div class="header">
+      <h1>{{companyName}}</h1>
+      <div class="meta">Issue #{{issueNumber}} | {{issueDate}}</div>
+    </div>
+
+    <div class="greeting">
+      <h2>{{greeting}}</h2>
+      <p>{{introText}}</p>
+    </div>
+
+    <div class="articles">
+      <h3>Featured Articles</h3>
+      {{#each articles}}
+      <div class="article">
+        <h4>{{title}}</h4>
+        <p>{{summary}}</p>
+        <a href="{{readMoreUrl}}">Read More &rarr;</a>
+      </div>
+      {{/each}}
+    </div>
+
+    <div class="cta-section">
+      <h3>{{ctaTitle}}</h3>
+      <p>{{ctaText}}</p>
+      <a href="#" class="cta-button">{{ctaButton}}</a>
+    </div>
+
+    <div class="footer">
+      <p>Stay connected with us on social media</p>
+      <div class="social-links">
+        <a href="{{socialLinks.twitter}}" title="Twitter">X</a>
+        <a href="{{socialLinks.linkedin}}" title="LinkedIn">in</a>
+        <a href="{{socialLinks.facebook}}" title="Facebook">f</a>
+      </div>
+      <div class="unsubscribe">
+        <a href="#">Unsubscribe</a> | <a href="#">View in Browser</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
