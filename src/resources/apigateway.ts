@@ -1,13 +1,28 @@
 /**
  * API Gateway Resources
  *
- * Configures CORS headers on API Gateway default responses (4XX/5XX errors).
- * Without this, browser blocks error responses due to missing CORS headers.
+ * Configures:
+ * 1. Cognito User Pool Authorizer for JWT token validation
+ * 2. CORS headers on API Gateway default responses (4XX/5XX errors)
  *
  * Allowed origins: *.mkpdfs.com (all environments)
  */
 
 export const apiGatewayResponses = {
+  // Cognito User Pool Authorizer - validates JWT tokens from frontend
+  ApiGatewayAuthorizer: {
+    Type: 'AWS::ApiGateway::Authorizer',
+    Properties: {
+      Name: 'CognitoAuthorizer',
+      Type: 'COGNITO_USER_POOLS',
+      IdentitySource: 'method.request.header.Authorization',
+      RestApiId: { Ref: 'ApiGatewayRestApi' },
+      ProviderARNs: [
+        { 'Fn::GetAtt': ['CognitoUserPool', 'Arn'] }
+      ]
+    }
+  },
+
   // Handle all 4XX errors (400, 401, 403, 404, etc.)
   GatewayResponseDefault4XX: {
     Type: 'AWS::ApiGateway::GatewayResponse',

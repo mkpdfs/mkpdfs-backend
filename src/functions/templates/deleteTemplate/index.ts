@@ -5,7 +5,10 @@ export default {
       http: {
         method: 'delete',
         path: 'templates/{templateId}',
-        authorizer: 'aws_iam',
+        authorizer: {
+          type: 'COGNITO_USER_POOLS',
+          authorizerId: { Ref: 'ApiGatewayAuthorizer' }
+        },
         cors: true
       }
     }

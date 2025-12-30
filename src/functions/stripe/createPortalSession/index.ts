@@ -5,7 +5,10 @@ export default {
       http: {
         method: 'post',
         path: 'stripe/create-portal-session',
-        authorizer: 'aws_iam',
+        authorizer: {
+          type: 'COGNITO_USER_POOLS',
+          authorizerId: { Ref: 'ApiGatewayAuthorizer' }
+        },
         cors: true
       }
     }
