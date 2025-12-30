@@ -48,6 +48,13 @@ const serverlessConfiguration: AWS = {
       // Offline settings
       IS_OFFLINE: '${env:IS_OFFLINE, "false"}',
       CHROMIUM_PATH: '${env:CHROMIUM_PATH, ""}',
+
+      // Stripe
+      STRIPE_SECRET_KEY: '${ssm:/mkpdfs/${self:provider.stage}/stripe-secret-key}',
+      STRIPE_WEBHOOK_SECRET: '${ssm:/mkpdfs/${self:provider.stage}/stripe-webhook-secret}',
+      STRIPE_PRICE_BASIC: '${ssm:/mkpdfs/${self:provider.stage}/stripe-price-basic}',
+      STRIPE_PRICE_PROFESSIONAL: '${ssm:/mkpdfs/${self:provider.stage}/stripe-price-professional}',
+      FRONTEND_URL: '${self:custom.frontendUrls.${self:provider.stage}}',
     },
     iam: {
       role: {
@@ -98,6 +105,16 @@ const serverlessConfiguration: AWS = {
             Resource: [
               'arn:aws:lambda:${self:provider.region}:*:function:${self:service}-${self:provider.stage}-*'
             ]
+          },
+          {
+            Effect: 'Allow',
+            Action: [
+              'ssm:GetParameter',
+              'ssm:GetParameters'
+            ],
+            Resource: [
+              'arn:aws:ssm:${self:provider.region}:*:parameter/mkpdfs/${self:provider.stage}/*'
+            ]
           }
         ]
       }
@@ -136,6 +153,11 @@ const serverlessConfiguration: AWS = {
       dev: 'dev.apis.mkpdfs.com',
       stage: 'stage.apis.mkpdfs.com',
       prod: 'apis.mkpdfs.com'
+    },
+    frontendUrls: {
+      dev: 'https://dev.mkpdfs.com',
+      stage: 'https://stage.mkpdfs.com',
+      prod: 'https://mkpdfs.com'
     }
   },
   layers: {

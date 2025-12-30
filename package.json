@@ -46,6 +46,7 @@
     "@middy/http-error-handler": "^6.3.2",
     "@middy/http-json-body-parser": "^6.3.2",
     "handlebars": "^4.7.8",
+    "stripe": "^20.1.0",
     "uuid": "^11.1.0"
   }
 }

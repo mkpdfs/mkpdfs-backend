@@ -18,3 +18,8 @@ export { default as generatePdfAsync } from './pdf/generateAsync';
 // Cognito trigger functions (no HTTP events, triggered by Cognito)
 export { default as preSignUp } from './cognito/preSignUp';
 export { default as postConfirmation } from './cognito/postConfirmation';
+
+// Stripe functions
+export { default as stripeCreateCheckoutSession } from './stripe/createCheckoutSession';
+export { default as stripeWebhook } from './stripe/webhook';
+export { default as stripeCreatePortalSession } from './stripe/createPortalSession';
