@@ -39,7 +39,7 @@ const serverlessConfiguration: AWS = {
       JOBS_TABLE: 'mkpdfs-${self:provider.stage}-jobs',
 
       // SQS queues
-      PDF_GENERATION_QUEUE_URL: { Ref: 'PdfGenerationQueue' },
+      PDF_GENERATION_QUEUE_URL: { 'Fn::GetAtt': ['PdfGenerationQueue', 'QueueUrl'] },
 
       // S3 buckets
       ASSETS_BUCKET: 'mkpdfs-${self:provider.stage}-bucket',
