@@ -13,6 +13,31 @@ const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const sqsClient = new SQSClient({});
 
+// Get SQS queue URL - handle offline mode where CloudFormation refs aren't resolved
+const getQueueUrl = (): string => {
+  const queueUrl = process.env.PDF_GENERATION_QUEUE_URL;
+
+  // If it's a valid URL string, use it directly
+  if (typeof queueUrl === 'string' && queueUrl.startsWith('https://')) {
+    return queueUrl;
+  }
+
+  // For offline/local development, construct the URL
+  // AWS SQS URL format: https://sqs.{region}.amazonaws.com/{account-id}/{queue-name}
+  const region = process.env.REGION || 'us-east-1';
+  const stage = process.env.STAGE || 'dev';
+  const queueName = `mkpdfs-${stage}-pdf-generation`;
+
+  // For local testing with localstack or elasticmq
+  if (process.env.IS_OFFLINE === 'true') {
+    // Return a placeholder - in offline mode, we'll skip SQS or use local queue
+    return `http://localhost:9324/queue/${queueName}`;
+  }
+
+  // Fallback: construct AWS URL (requires account ID from context)
+  return `https://sqs.${region}.amazonaws.com/197837191835/${queueName}`;
+};
+
 interface SubmitJobRequest {
   templateId: string;
   data: any;
@@ -88,17 +113,24 @@ const submitJob: ValidatedEventAPIGatewayProxyEvent<SubmitJobRequest> = async (e
     }));
 
     // Send message to SQS queue
-    await sqsClient.send(new SendMessageCommand({
-      QueueUrl: process.env.PDF_GENERATION_QUEUE_URL,
-      MessageBody: JSON.stringify({
-        jobId,
-        userId,
-        templateId,
-        data,
-        sendEmail,
-        pageCount
-      })
-    }));
+    const queueUrl = getQueueUrl();
+
+    // In offline mode, skip SQS (job stays pending, can be processed manually)
+    if (process.env.IS_OFFLINE !== 'true') {
+      await sqsClient.send(new SendMessageCommand({
+        QueueUrl: queueUrl,
+        MessageBody: JSON.stringify({
+          jobId,
+          userId,
+          templateId,
+          data,
+          sendEmail,
+          pageCount
+        })
+      }));
+    } else {
+      console.log(`[OFFLINE] Skipping SQS. Job ${jobId} created but not queued. Queue URL would be: ${queueUrl}`);
+    }
 
     // Build status URL
     const baseUrl = process.env.FRONTEND_URL?.replace('https://', 'https://apis.').replace('.mkpdfs.com', '.apis.mkpdfs.com') ||
