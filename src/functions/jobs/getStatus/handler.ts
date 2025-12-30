@@ -28,6 +28,8 @@ const getJobStatus: ValidatedEventAPIGatewayProxyEvent<void> = async (event) => 
     const userId = event.userId!;
     const jobId = event.pathParameters?.jobId;
 
+    console.log('[getJobStatus] Request:', { jobId, userId, table: process.env.JOBS_TABLE });
+
     if (!jobId) {
       return formatErrorResponse(new Error('jobId is required'), 400);
     }
@@ -38,6 +40,8 @@ const getJobStatus: ValidatedEventAPIGatewayProxyEvent<void> = async (event) => 
       Key: { jobId }
     }));
 
+    console.log('[getJobStatus] DynamoDB result:', { found: !!result.Item, jobUserId: result.Item?.userId });
+
     if (!result.Item) {
       return formatErrorResponse(new Error('Job not found'), 404);
     }
@@ -46,6 +50,7 @@ const getJobStatus: ValidatedEventAPIGatewayProxyEvent<void> = async (event) => 
 
     // Security: Ensure user owns this job
     if (job.userId !== userId) {
+      console.log('[getJobStatus] Ownership mismatch:', { jobUserId: job.userId, requestUserId: userId });
       return formatErrorResponse(new Error('Job not found'), 404);
     }
 
