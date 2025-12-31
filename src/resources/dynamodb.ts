@@ -257,5 +257,38 @@ export const dynamoDbTables = {
         Enabled: true
       }
     }
+  },
+
+  // Rate limits table - tracks rate limiting by IP for public endpoints
+  RateLimitsTable: {
+    Type: 'AWS::DynamoDB::Table',
+    Properties: {
+      TableName: 'mkpdfs-${self:provider.stage}-rate-limits',
+      AttributeDefinitions: [
+        {
+          AttributeName: 'pk',
+          AttributeType: 'S'
+        },
+        {
+          AttributeName: 'sk',
+          AttributeType: 'S'
+        }
+      ],
+      KeySchema: [
+        {
+          AttributeName: 'pk',
+          KeyType: 'HASH'
+        },
+        {
+          AttributeName: 'sk',
+          KeyType: 'RANGE'
+        }
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      TimeToLiveSpecification: {
+        AttributeName: 'ttl',
+        Enabled: true
+      }
+    }
   }
 };

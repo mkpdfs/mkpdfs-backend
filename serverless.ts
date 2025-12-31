@@ -37,6 +37,7 @@ const serverlessConfiguration: AWS = {
       TEMPLATES_TABLE: 'mkpdfs-${self:provider.stage}-templates',
       MARKETPLACE_TABLE: 'mkpdfs-${self:provider.stage}-marketplace',
       JOBS_TABLE: 'mkpdfs-${self:provider.stage}-jobs',
+      RATE_LIMIT_TABLE: 'mkpdfs-${self:provider.stage}-rate-limits',
 
       // SQS queues
       PDF_GENERATION_QUEUE_URL: { 'Fn::GetAtt': ['PdfGenerationQueue', 'QueueUrl'] },

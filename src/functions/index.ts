@@ -37,3 +37,6 @@ export { default as marketplaceUseTemplate } from './marketplace/useTemplate';
 
 // AI functions (AWS_IAM only, premium feature)
 export { default as generateAITemplate } from './ai/generateTemplate';
+
+// Contact functions (public)
+export { default as contactEnterprise } from './contact/enterpriseContact';
