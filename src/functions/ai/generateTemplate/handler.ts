@@ -11,12 +11,19 @@ const bedrockService = new BedrockService();
 interface GenerateTemplateBody {
   prompt: string;
   templateType?: string;
+  imageBase64?: string;
+  imageMediaType?: 'image/png' | 'image/jpeg' | 'image/webp';
+  previousTemplate?: string;
+  feedback?: string;
 }
+
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
+const MAX_IMAGE_SIZE_BASE64 = 5 * 1024 * 1024 * 1.34; // ~6.7MB base64 for 5MB binary
 
 const generateTemplate: ValidatedEventAPIGatewayProxyEvent<GenerateTemplateBody> = async (event: any) => {
   try {
     const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-    const { prompt, templateType } = body;
+    const { prompt, templateType, imageBase64, imageMediaType, previousTemplate, feedback } = body;
 
     if (!prompt || typeof prompt !== 'string') {
       return formatJSONResponse({
@@ -42,10 +49,46 @@ const generateTemplate: ValidatedEventAPIGatewayProxyEvent<GenerateTemplateBody>
       }, 400);
     }
 
+    // Image validation
+    if (imageBase64) {
+      // Validate media type
+      if (!imageMediaType || !ALLOWED_IMAGE_TYPES.includes(imageMediaType as typeof ALLOWED_IMAGE_TYPES[number])) {
+        return formatJSONResponse({
+          success: false,
+          error: 'INVALID_IMAGE_TYPE',
+          message: 'Image must be PNG, JPEG, or WebP format'
+        }, 400);
+      }
+
+      // Validate size (base64 is ~33% larger than binary)
+      if (imageBase64.length > MAX_IMAGE_SIZE_BASE64) {
+        return formatJSONResponse({
+          success: false,
+          error: 'IMAGE_TOO_LARGE',
+          message: 'Image must be under 5MB'
+        }, 400);
+      }
+
+      // Basic base64 validation
+      if (!/^[A-Za-z0-9+/=]+$/.test(imageBase64)) {
+        return formatJSONResponse({
+          success: false,
+          error: 'INVALID_IMAGE_DATA',
+          message: 'Invalid image data format'
+        }, 400);
+      }
+    }
+
     // Generate template using Bedrock
     const result = await bedrockService.generateTemplate({
       prompt,
-      templateType
+      templateType,
+      image: imageBase64 && imageMediaType ? {
+        data: imageBase64,
+        mediaType: imageMediaType
+      } : undefined,
+      previousTemplate,
+      feedback
     });
 
     // Calculate remaining generations after this one
