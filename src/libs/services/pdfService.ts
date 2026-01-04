@@ -141,6 +141,31 @@ export class PdfService {
   }
 
   /**
+   * Generate a screenshot/thumbnail from HTML content.
+   * Used for AI-generated template previews.
+   */
+  async generateScreenshot(html: string): Promise<Buffer> {
+    const browser = await this.getBrowser();
+
+    const page = await browser.newPage();
+    try {
+      // Set viewport to A4-like aspect ratio (800x1132 is roughly A4)
+      await page.setViewport({ width: 800, height: 1132 });
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.emulateMediaType('screen');
+
+      const screenshot = await page.screenshot({
+        type: 'png',
+        clip: { x: 0, y: 0, width: 800, height: 1132 }
+      });
+
+      return Buffer.from(screenshot);
+    } finally {
+      await page.close();
+    }
+  }
+
+  /**
    * Get or create a reusable browser instance.
    * Browser is reused across warm Lambda invocations for better performance.
    */

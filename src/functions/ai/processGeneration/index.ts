@@ -1,8 +1,11 @@
 export default {
   handler: 'src/functions/ai/processGeneration/handler.main',
   timeout: 300, // 5 minutes for AI generation
-  memorySize: 1024,
+  memorySize: 2048, // Increased for Puppeteer/Chromium thumbnail generation
   reservedConcurrency: 5, // Limit concurrent executions (AI calls are expensive)
+  layers: [
+    { Ref: 'PuppeteerLambdaLayer' } // For thumbnail generation
+  ],
   events: [
     {
       sqs: {

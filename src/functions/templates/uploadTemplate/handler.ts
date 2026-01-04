@@ -17,6 +17,7 @@ interface UploadTemplateBody {
   name: string;
   description?: string;
   content: string; // Base64 encoded or plain text Handlebars template
+  thumbnailKey?: string; // S3 key for AI-generated thumbnail
 }
 
 const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = async (event: any) => {
@@ -28,6 +29,7 @@ const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = a
     let name: string;
     let description: string | undefined;
     let templateContent: string;
+    let thumbnailKey: string | undefined;
 
     const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
 
@@ -66,6 +68,7 @@ const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = a
       name = fields['name'];
       description = fields['description'];
       templateContent = fields['file'] || fields['content'];
+      thumbnailKey = fields['thumbnailKey'];
 
       if (!name || !templateContent) {
         return formatJSONResponse({
@@ -78,6 +81,7 @@ const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = a
       name = body.name;
       description = body.description;
       templateContent = body.content;
+      thumbnailKey = body.thumbnailKey;
 
       // If content is base64 encoded, decode it
       if (body.contentEncoding === 'base64') {
@@ -142,7 +146,7 @@ const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = a
     }));
 
     // Store metadata in DynamoDB
-    const template = {
+    const template: Record<string, unknown> = {
       userId,
       templateId,
       id: templateId, // Also include 'id' for frontend compatibility
@@ -153,6 +157,11 @@ const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = a
       createdAt: now,
       updatedAt: now
     };
+
+    // Add thumbnailKey if provided (from AI-generated templates)
+    if (thumbnailKey) {
+      template.thumbnailKey = thumbnailKey;
+    }
 
     await docClient.send(new PutCommand({
       TableName: process.env.TEMPLATES_TABLE!,

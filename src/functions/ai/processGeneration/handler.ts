@@ -1,7 +1,9 @@
 import { SQSHandler, SQSRecord } from 'aws-lambda';
 import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import Handlebars from 'handlebars';
 import {
   BedrockService,
   QuestionAnswer,
@@ -9,11 +11,13 @@ import {
   ImageAnalysis,
   AnalysisContext
 } from '@libs/services/bedrockService';
+import { PdfService } from '@libs/services/pdfService';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
 const s3Client = new S3Client({});
 const bedrockService = new BedrockService();
+const pdfService = new PdfService();
 
 interface AIJobMessage {
   jobId: string;
@@ -236,7 +240,46 @@ const processGenerationJob = async (message: AIJobMessage): Promise<void> => {
   const ttl = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
   const completedAt = new Date().toISOString();
 
-  // Update job as completed
+  // Generate thumbnail (non-fatal if fails)
+  let thumbnailUrl: string | undefined;
+  let thumbnailKey: string | undefined;
+  try {
+    console.log(`[processAIJob] Generating thumbnail for job ${jobId}`);
+
+    // Compile template with sample data to get HTML
+    const compiled = Handlebars.compile(result.template.content);
+    const html = compiled(result.sampleData);
+
+    // Generate screenshot
+    const screenshotBuffer = await pdfService.generateScreenshot(html);
+
+    // Upload to S3
+    thumbnailKey = `users/${userId}/thumbnails/${jobId}.png`;
+    await s3Client.send(new PutObjectCommand({
+      Bucket: process.env.ASSETS_BUCKET,
+      Key: thumbnailKey,
+      Body: screenshotBuffer,
+      ContentType: 'image/png',
+      Metadata: {
+        userId,
+        jobId,
+        generatedAt: completedAt
+      }
+    }));
+
+    // Generate presigned URL (7 days to match job TTL)
+    thumbnailUrl = await getSignedUrl(s3Client, new GetObjectCommand({
+      Bucket: process.env.ASSETS_BUCKET!,
+      Key: thumbnailKey
+    }), { expiresIn: 7 * 24 * 60 * 60 });
+
+    console.log(`[processAIJob] Thumbnail generated: ${thumbnailKey}`);
+  } catch (thumbnailError) {
+    console.error('[processAIJob] Thumbnail generation failed (non-fatal):', thumbnailError);
+    // Continue without thumbnail - don't fail the job
+  }
+
+  // Update job as completed (include thumbnail info if generated)
   await docClient.send(new UpdateCommand({
     TableName: process.env.AI_JOBS_TABLE,
     Key: { jobId },
@@ -244,6 +287,8 @@ const processGenerationJob = async (message: AIJobMessage): Promise<void> => {
       SET #status = :status,
           template = :template,
           sampleData = :sampleData,
+          thumbnailKey = :thumbnailKey,
+          thumbnailUrl = :thumbnailUrl,
           completedAt = :completedAt,
           updatedAt = :updatedAt,
           #ttl = :ttl
@@ -256,6 +301,8 @@ const processGenerationJob = async (message: AIJobMessage): Promise<void> => {
       ':status': 'completed',
       ':template': result.template,
       ':sampleData': result.sampleData,
+      ':thumbnailKey': thumbnailKey || null,
+      ':thumbnailUrl': thumbnailUrl || null,
       ':completedAt': completedAt,
       ':updatedAt': completedAt,
       ':ttl': ttl

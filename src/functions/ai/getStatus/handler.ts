@@ -26,6 +26,8 @@ interface AIJobRecord {
     description: string;
   };
   sampleData?: Record<string, unknown>;
+  thumbnailKey?: string; // S3 key for template thumbnail (for saving)
+  thumbnailUrl?: string; // Presigned URL for template thumbnail (for display)
   // Common fields
   error?: string;
   errorCode?: string;
@@ -87,9 +89,11 @@ const getAIJobStatus: ValidatedEventAPIGatewayProxyEvent<void> = async (event) =
           response.imageAnalysis = job.imageAnalysis;
         }
       } else {
-        // Generation job - return template and sampleData
+        // Generation job - return template, sampleData, and thumbnail info
         response.template = job.template;
         response.sampleData = job.sampleData;
+        response.thumbnailKey = job.thumbnailKey || null;
+        response.thumbnailUrl = job.thumbnailUrl || null;
       }
     } else if (job.status === 'failed') {
       response.error = job.error;
