@@ -2,12 +2,11 @@ import { APIGatewayProxyHandler } from 'aws-lambda';
 import { formatJSONResponse, formatErrorResponse } from '@libs/apiGateway';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { getSsmParameter } from '@libs/ssmParams';
 import { TwilioService } from '@libs/services/twilioService';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
-const ssmClient = new SSMClient({});
 
 const RATE_LIMIT_MAX = 3;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -22,13 +21,8 @@ function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-async function getSSMParameter(name: string): Promise<string> {
-  const response = await ssmClient.send(new GetParameterCommand({
-    Name: name,
-    WithDecryption: true
-  }));
-  return response.Parameter?.Value || '';
-}
+// SSM lookups go through the shared cached helper (one fetch per warm container).
+const getSSMParameter = getSsmParameter;
 
 async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
   const now = Date.now();

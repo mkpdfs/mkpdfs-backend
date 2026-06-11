@@ -5,6 +5,8 @@ layers/puppeteer/node_modules/
 # Build outputs
 .esbuild/
 .serverless/
+cdk/cdk.out/
+cdk.context.json
 
 # Environment
 .env

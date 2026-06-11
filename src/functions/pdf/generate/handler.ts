@@ -51,9 +51,14 @@ export const generatePdf: ValidatedEventAPIGatewayProxyEvent<GeneratePdfRequest>
     (event as any).pageCount = pageCount;
 
     if (async) {
-      // Invoke async Lambda with pageCount for usage tracking
+      // Invoke async Lambda with pageCount for usage tracking.
+      // GENERATE_PDF_ASYNC_FUNCTION_NAME is injected by CDK with the real
+      // function name; the legacy `${service}-${stage}-generatePdfAsync`
+      // fallback keeps the still-live Serverless stack working (enmienda 3).
       const command = new InvokeCommand({
-        FunctionName: `${process.env.SERVICE_NAME}-${process.env.STAGE}-generatePdfAsync`,
+        FunctionName:
+          process.env.GENERATE_PDF_ASYNC_FUNCTION_NAME ||
+          `${process.env.SERVICE_NAME}-${process.env.STAGE}-generatePdfAsync`,
         InvocationType: 'Event',
         Payload: Buffer.from(JSON.stringify({
           userId,
