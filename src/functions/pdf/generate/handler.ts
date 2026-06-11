@@ -18,7 +18,9 @@ interface GeneratePdfRequest {
 
 const MAX_ITEMS_PER_REQUEST = 50;
 
-const generatePdf: ValidatedEventAPIGatewayProxyEvent<GeneratePdfRequest> = async (event, context) => {
+// Exported so the API-key-only route (POST /v1/pdf/generate) can reuse the
+// exact same business logic with a different auth middleware. Do not duplicate.
+export const generatePdf: ValidatedEventAPIGatewayProxyEvent<GeneratePdfRequest> = async (event, context) => {
   // Don't wait for empty event loop
   context.callbackWaitsForEmptyEventLoop = false;
 

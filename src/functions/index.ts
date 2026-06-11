@@ -15,6 +15,8 @@ export { default as deleteTemplate } from './templates/deleteTemplate';
 // PDF generation functions (Dual auth)
 export { default as generatePdf } from './pdf/generate';
 export { default as generatePdfAsync } from './pdf/generateAsync';
+// Server-to-server PDF generation (API token only, no Gateway authorizer)
+export { default as generatePdfApiKey } from './pdf/generateApiKey';
 
 // Async job functions (Dual auth)
 export { default as submitJob } from './jobs/submit';
