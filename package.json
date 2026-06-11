@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No tests configured\"",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p cdk --noEmit",
     "lint": "echo \"No linter configured\"",
     "cdk:synth": "cd cdk && cdk synth -c environment=dev",
@@ -44,7 +44,8 @@
     "serverless-offline": "^13.8.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.958.0",
