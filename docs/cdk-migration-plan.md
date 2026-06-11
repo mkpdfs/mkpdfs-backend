@@ -235,3 +235,9 @@ La estrategia híbrida 2→1 queda SUPERSEDIDA. Nueva estrategia: **CDK dueño d
 
 ### Lección del ensayo dev
 - El runbook debe borrar TAMBIÉN los records A/AAAA de Route53 del dominio (el plugin los creó fuera de CFN); borrar solo el domain name de API Gateway deja los records y el Api stack rollbackea al crear los alias.
+
+### Ejecución PROD (2026-06-11) — COMPLETA
+- Runbook ejecutado con autorización explícita del user. Outputs: pool `us-east-1_IijpRQ3FN`, client `3mgah7n76j694e5sb0092fl6hn`, identity `us-east-1:d479c30a-8bf7-4753-bbc6-5c4968a25d17`, API `ni9r76mk4l`, `apis.mkpdfs.com` (CloudFront `d2akcyc7pps3mx` — propagó en minutos, no 20-40).
+- Lección: los SSM `/mkpdfs/prod/stripe-price-*` eran SecureString y CFN NO soporta SecureString como template Parameter — el deploy abortó tras Database **con exit 0** (revisar el final del log siempre). Fix: convertidos a String (price IDs no son secretos).
+- Lección: CFN dejó `mkpdfs-prod-bucket` vivo (vacío) tras el delete-stack — borrado manual para liberar el nombre.
+- Validación: provision verde por el dominio custom, Hosted UI `auth-mkpdfs-prod` ACTIVE + Google IdP, login real mkpdfs.com OK, e2e kardex desde labs (PDF 148KB pipeline nuevo). Zip Chromium re-subido a `lambda-layers/`.
