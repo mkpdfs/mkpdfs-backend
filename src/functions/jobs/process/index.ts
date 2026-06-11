@@ -1,7 +1,7 @@
 export default {
   handler: 'src/functions/jobs/process/handler.main',
   layers: [
-    { Ref: 'PuppeteerLambdaLayer' }
+    '${self:custom.chromiumLayerArn}'
   ],
   timeout: 300, // 5 minutes for PDF generation
   memorySize: 2048,

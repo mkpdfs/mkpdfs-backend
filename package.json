@@ -6,9 +6,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "typecheck": "tsc --noEmit",
     "lint": "echo \"No linter configured\"",
-    "deploy:dev": "npm run build:layer && AWS_PROFILE=rocketeast serverless deploy --stage dev",
+    "deploy:dev": "AWS_PROFILE=rocketeast serverless deploy --stage dev",
     "deploy:stage": "AWS_PROFILE=rocketeast serverless deploy --stage stage",
-    "deploy:prod": "npm run build:layer && AWS_PROFILE=rocketeast serverless deploy --stage prod",
+    "deploy:prod": "AWS_PROFILE=rocketeast serverless deploy --stage prod",
     "offline": "AWS_PROFILE=rocketeast IS_OFFLINE=true serverless offline --stage dev",
     "remove:dev": "AWS_PROFILE=rocketeast serverless remove --stage dev",
     "remove:stage": "AWS_PROFILE=rocketeast serverless remove --stage stage",
@@ -16,8 +16,7 @@
     "info:dev": "AWS_PROFILE=rocketeast serverless info --stage dev",
     "info:stage": "AWS_PROFILE=rocketeast serverless info --stage stage",
     "info:prod": "AWS_PROFILE=rocketeast serverless info --stage prod",
-    "logs": "serverless logs -f $FUNCTION --stage dev",
-    "build:layer": "cd layers/puppeteer/nodejs && npm install --omit=dev"
+    "logs": "serverless logs -f $FUNCTION --stage dev"
   },
   "keywords": [],
   "author": "",

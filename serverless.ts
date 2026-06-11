@@ -164,11 +164,16 @@ const serverlessConfiguration: AWS = {
     individually: true
   },
   custom: {
+    // Layer de Chromium publicada UNA VEZ desde S3 (artefacto oficial
+    // Sparticuz v143 x64, s3://mkpdfs-prod-bucket/lambda-layers/) — los
+    // deploys ya no empaquetan ~70-114MB. puppeteer-core va BUNDLEADO por
+    // esbuild (JS puro); el binario vive en la layer.
+    chromiumLayerArn: 'arn:aws:lambda:us-east-1:197837191835:layer:mkpdfs-chromium:1',
     esbuild: {
       bundle: true,
       minify: false,
       sourcemap: true,
-      exclude: ['aws-sdk', '@sparticuz/chromium-min', 'puppeteer-core', '@sparticuz/chromium'],
+      exclude: ['aws-sdk', '@sparticuz/chromium-min', '@sparticuz/chromium'],
       target: 'node20',
       define: { 'require.resolve': undefined },
       platform: 'node',
@@ -197,14 +202,6 @@ const serverlessConfiguration: AWS = {
       dev: 'https://dev.mkpdfs.com',
       stage: 'https://stage.mkpdfs.com',
       prod: 'https://mkpdfs.com'
-    }
-  },
-  layers: {
-    puppeteer: {
-      path: 'layers/puppeteer',
-      compatibleRuntimes: ['nodejs20.x'],
-      description: 'Chromium binary for PDF generation',
-      retain: false
     }
   },
   resources: {

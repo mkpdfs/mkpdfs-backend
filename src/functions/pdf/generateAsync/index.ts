@@ -1,7 +1,7 @@
 export default {
   handler: 'src/functions/pdf/generateAsync/handler.main',
   layers: [
-    { Ref: 'PuppeteerLambdaLayer' }
+    '${self:custom.chromiumLayerArn}'
   ],
   timeout: 60,
   memorySize: 2048,

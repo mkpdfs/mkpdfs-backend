@@ -4,7 +4,7 @@ export default {
   memorySize: 2048, // Increased for Puppeteer/Chromium thumbnail generation
   reservedConcurrency: 5, // Limit concurrent executions (AI calls are expensive)
   layers: [
-    { Ref: 'PuppeteerLambdaLayer' } // For thumbnail generation
+    '${self:custom.chromiumLayerArn}' // For thumbnail generation
   ],
   events: [
     {
