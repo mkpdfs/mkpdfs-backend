@@ -1,0 +1,9 @@
+{
+  "name": "puppeteer-layer",
+  "version": "1.0.0",
+  "description": "Lambda layer for Puppeteer and Chromium",
+  "dependencies": {
+    "@sparticuz/chromium": "^143.0.0",
+    "puppeteer-core": "^24.11.1"
+  }
+}

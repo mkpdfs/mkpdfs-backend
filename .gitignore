@@ -27,3 +27,4 @@ npm-debug.log*
 
 # Coverage
 coverage/
+layers/puppeteer/nodejs/node_modules/
