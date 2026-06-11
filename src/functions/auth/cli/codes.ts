@@ -11,5 +11,8 @@ export const generateDeviceCode = (): string => randomBytes(32).toString('hex');
 export const formatUserCode = (code: string): string =>
   `${code.slice(0, 4)}-${code.slice(4)}`;
 
+// Note: no character substitution (e.g. 0→O) is possible here — the generation
+// alphabet excludes 0, O, 1 and I entirely, so any input containing them is a
+// misread with no recoverable mapping. Lookup simply fails with "check your terminal".
 export const normalizeUserCode = (input: string): string =>
   input.toUpperCase().replace(/[^A-Z0-9]/g, '');
