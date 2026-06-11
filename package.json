@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"No tests configured\"",
     "typecheck": "tsc --noEmit && tsc -p cdk --noEmit",
     "lint": "echo \"No linter configured\"",
     "cdk:synth": "cd cdk && cdk synth -c environment=dev",
