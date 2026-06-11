@@ -449,6 +449,30 @@ export class ApiStack extends cdk.Stack {
     grantSsmParams(contactEnterprise, env); // twilio-* + enterprise-contact-phone
     addRoute('/contact/enterprise', 'POST', contactEnterprise, false);
 
+    // ---- CLI device-flow auth ----
+    const cliDevice = makeFn('CliDeviceFn', {
+      entry: 'src/functions/auth/cli/device/handler.ts',
+      description: 'CLI device flow: start (public, IP rate-limited)',
+    });
+    tables.cliAuth.grantWriteData(cliDevice);
+    tables.rateLimits.grantReadWriteData(cliDevice);
+    addRoute('/auth/cli/device', 'POST', cliDevice, false);
+
+    const cliApprove = makeFn('CliApproveFn', {
+      entry: 'src/functions/auth/cli/approve/handler.ts',
+      description: 'CLI device flow: approve/deny (Cognito JWT)',
+    });
+    tables.cliAuth.grantReadWriteData(cliApprove);
+    tables.rateLimits.grantReadWriteData(cliApprove);
+    addRoute('/auth/cli/approve', 'POST', cliApprove, true);
+
+    const cliToken = makeFn('CliTokenFn', {
+      entry: 'src/functions/auth/cli/token/handler.ts',
+      description: 'CLI device flow: token polling (public, interval-enforced)',
+    });
+    tables.cliAuth.grantReadWriteData(cliToken);
+    addRoute('/auth/cli/token', 'POST', cliToken, false);
+
     // =================================================================
     // Custom domain (EDGE, same TLS policy) + Route53 A/AAAA
     // =================================================================
