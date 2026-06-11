@@ -232,3 +232,6 @@ La estrategia híbrida 2→1 queda SUPERSEDIDA. Nueva estrategia: **CDK dueño d
 2. **Dominios**: el plugin los creó FUERA de CFN — el runbook los borra explícitamente (domain + base path + records A/AAAA) ANTES de `cdk deploy`, aceptando la ventana de indisponibilidad (sin usuarios) y la propagación CloudFront del dominio nuevo (~20-40 min). Ensayo completo en dev primero.
 3. **Dependientes como pasos BLOQUEANTES del runbook** (no post-tarea): CDK emite CfnOutputs JSON (poolId/clientId/identityPoolId/apiUrl) → `provision-mkpdfs.mjs` parametrizado para LEER pool/client por flag/outputs (hoy hardcodeados) → re-provision → actualizar SSM + templateIds en democonnect cdk.json + redeploy democonnect → actualizar env de mkpdfs-web + redeploy Amplify. Smoke de PDF end-to-end cierra el runbook.
 4. **Rollback explícito**: sin flip rápido (el stack viejo muere primero). Prod solo arranca con: ensayo dev completo verde, backups verificados (dy export + s3 sync), `cdk synth` + change set revisado. Restauración = redeploy serverless desde git (validar que aún corre ANTES de borrar nada) + re-provision.
+
+### Lección del ensayo dev
+- El runbook debe borrar TAMBIÉN los records A/AAAA de Route53 del dominio (el plugin los creó fuera de CFN); borrar solo el domain name de API Gateway deja los records y el Api stack rollbackea al crear los alias.
