@@ -56,7 +56,7 @@ const startDeviceAuth = async (event: any) => {
       ConditionExpression: 'attribute_not_exists(deviceCode)',
     }));
 
-    const webBase = process.env.STAGE === 'prod' ? 'https://mkpdfs.com' : 'https://dev.mkpdfs.com';
+    const webBase = process.env.FRONTEND_URL!;
     return formatJSONResponse({
       deviceCode,
       userCode,
