@@ -91,6 +91,7 @@ export function tableNames(environment: EnvironmentName) {
     jobs: `${p}-jobs`,
     rateLimits: `${p}-rate-limits`,
     aiJobs: `${p}-ai-jobs`,
+    cliAuth: `${p}-cli-auth`,
   };
 }
 

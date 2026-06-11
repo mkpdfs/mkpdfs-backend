@@ -17,6 +17,7 @@ export interface MkpdfsTables {
   jobs: dynamodb.Table;
   rateLimits: dynamodb.Table;
   aiJobs: dynamodb.Table;
+  cliAuth: dynamodb.Table;
 }
 
 /**
@@ -135,6 +136,18 @@ export class DatabaseStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    const cliAuth = new dynamodb.Table(this, 'CliAuthTable', {
+      ...common,
+      tableName: names.cliAuth,
+      partitionKey: { name: 'deviceCode', type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: 'ttl',
+    });
+    cliAuth.addGlobalSecondaryIndex({
+      indexName: 'userCode-index',
+      partitionKey: { name: 'userCode', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     this.tables = {
       users,
       tokens,
@@ -145,6 +158,7 @@ export class DatabaseStack extends cdk.Stack {
       jobs,
       rateLimits,
       aiJobs,
+      cliAuth,
     };
 
     for (const [key, table] of Object.entries(this.tables)) {

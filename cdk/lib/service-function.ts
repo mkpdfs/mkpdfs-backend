@@ -125,6 +125,7 @@ export function buildCommonEnv(
     JOBS_TABLE: tables.jobs,
     RATE_LIMIT_TABLE: tables.rateLimits,
     AI_JOBS_TABLE: tables.aiJobs,
+    CLI_AUTH_TABLE: tables.cliAuth,
 
     ASSETS_BUCKET: bucketName(env),
     ASSETS_BUCKET_URL: `https://${bucketName(env)}.s3.${REGION}.amazonaws.com`,
