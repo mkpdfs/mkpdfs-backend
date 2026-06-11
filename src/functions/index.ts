@@ -10,6 +10,7 @@ export { default as getUserUsage } from './user/getUsage';
 export { default as listUserTemplates } from './templates/listTemplates';
 export { default as getUserTemplate } from './templates/getTemplate';
 export { default as uploadTemplate } from './templates/uploadTemplate';
+export { default as updateTemplate } from './templates/updateTemplate';
 export { default as deleteTemplate } from './templates/deleteTemplate';
 
 // PDF generation functions (Dual auth)
