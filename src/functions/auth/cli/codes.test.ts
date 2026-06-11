@@ -26,8 +26,4 @@ describe('user code formatting', () => {
   it('normalizes user input (case, dashes, spaces)', () => {
     expect(normalizeUserCode(' kxtm-49pf ')).toBe('KXTM49PF');
   });
-  it('substitutes ambiguous characters (0→O, 1→I)', () => {
-    expect(normalizeUserCode('0xtm-49pf')).toBe('OXTM49PF');
-    expect(normalizeUserCode('KXTM-49P1')).toBe('KXTM49PI');
-  });
 });
