@@ -50,6 +50,7 @@ const pollToken = async (event: any) => {
       Key: { deviceCode },
       ConditionExpression: '#status = :approved',
       ExpressionAttributeNames: { '#status': 'status' },
+      ExpressionAttributeValues: { ':approved': 'approved' },
       ReturnValues: 'ALL_OLD',
     }));
     const tokens = deleted.Attributes?.tokens;
