@@ -13,6 +13,8 @@ import { createRechargePaymentIntent } from './stripeService';
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
+const RECHARGE_LOCK_STALE_MS = 15 * 60 * 1000; // webhook normally clears the lock in seconds
+
 export type CreditType = 'purchase' | 'auto_recharge';
 
 export interface BillingRecord {
@@ -23,6 +25,7 @@ export interface BillingRecord {
   autoRecharge?: boolean;
   rechargeThreshold?: number;
   rechargeInProgress?: boolean;
+  rechargeLockedAt?: string;
   stripeCustomerId?: string;
   stripePaymentMethodId?: string;
   autoRechargeError?: string;
@@ -89,6 +92,9 @@ export async function debitCredits(params: {
   description: string;
 }): Promise<number> {
   const now = new Date().toISOString();
+  // No ConditionExpression: the 402 gate runs before the handler, and the
+  // debit lands after success. Concurrent requests can briefly overdraw —
+  // accepted for v1; ADD keeps the math consistent (balance can go negative).
   const result = await docClient.send(new UpdateCommand({
     TableName: process.env.SUBSCRIPTIONS_TABLE!,
     Key: { userId: params.userId },
@@ -97,6 +103,9 @@ export async function debitCredits(params: {
     ReturnValues: 'UPDATED_NEW',
   }));
   const balanceAfter = (result.Attributes?.creditBalance as number) ?? 0;
+  // Two writes, not a transaction: TransactWrite cannot return UPDATED_NEW,
+  // and the ledger entry needs balanceAfter. A crash between the two loses
+  // only the audit row — the balance itself stays correct. Accepted risk.
   await docClient.send(new PutCommand({
     TableName: process.env.CREDIT_LEDGER_TABLE!,
     Item: {
@@ -129,16 +138,19 @@ export async function maybeTriggerAutoRecharge(params: {
   if (balanceAfter >= threshold) return;
 
   try {
+    const nowIso = new Date().toISOString();
+    const staleBefore = new Date(Date.now() - RECHARGE_LOCK_STALE_MS).toISOString();
     await docClient.send(new UpdateCommand({
       TableName: process.env.SUBSCRIPTIONS_TABLE!,
       Key: { userId: billing.userId },
-      UpdateExpression: 'SET rechargeInProgress = :true, updatedAt = :now',
+      UpdateExpression: 'SET rechargeInProgress = :true, rechargeLockedAt = :now, updatedAt = :now',
       ConditionExpression:
-        'attribute_not_exists(rechargeInProgress) OR rechargeInProgress = :false',
+        'attribute_not_exists(rechargeInProgress) OR rechargeInProgress = :false OR rechargeLockedAt < :staleBefore',
       ExpressionAttributeValues: {
         ':true': true,
         ':false': false,
-        ':now': new Date().toISOString(),
+        ':now': nowIso,
+        ':staleBefore': staleBefore,
       },
     }));
   } catch (err: any) {
@@ -166,7 +178,11 @@ export async function maybeTriggerAutoRecharge(params: {
   }
 }
 
-/** Ledger entries, newest first. SK order is mixed (stripe#… vs ISO#…), so sort by createdAt. */
+/**
+ * Ledger entries, newest first. SK order is mixed (stripe#… vs ISO#…), so sort by createdAt.
+ * Fetches the full partition (no Limit) because newest-first requires the createdAt sort;
+ * fine at v1 volumes, revisit with pagination if ledgers grow large.
+ */
 export async function listLedgerEntries(userId: string, limit = 50) {
   const result = await docClient.send(new QueryCommand({
     TableName: process.env.CREDIT_LEDGER_TABLE!,

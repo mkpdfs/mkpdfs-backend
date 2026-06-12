@@ -3,12 +3,14 @@ import { mockClient } from 'aws-sdk-client-mock';
 import {
   DynamoDBDocumentClient,
   PutCommand,
+  QueryCommand,
   TransactWriteCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import {
   creditFromStripePayment,
   debitCredits,
+  listLedgerEntries,
   maybeTriggerAutoRecharge,
 } from './creditService';
 
@@ -64,6 +66,15 @@ describe('debitCredits', () => {
     expect(put.Item!.type).toBe('debit');
     expect(put.Item!.balanceAfter).toBe(990);
   });
+
+  it('allows the balance to go negative (overdraw accepted, gate is upstream)', async () => {
+    ddbMock.on(UpdateCommand).resolves({ Attributes: { creditBalance: -2 } });
+    ddbMock.on(PutCommand).resolves({});
+    const after = await debitCredits({ userId: 'u1', amount: 5, description: 'pdf_generation' });
+    expect(after).toBe(-2);
+    const put = ddbMock.commandCalls(PutCommand)[0].args[0].input;
+    expect(put.Item!.balanceAfter).toBe(-2);
+  });
 });
 
 describe('maybeTriggerAutoRecharge', () => {
@@ -88,6 +99,7 @@ describe('maybeTriggerAutoRecharge', () => {
     await maybeTriggerAutoRecharge({ billing, balanceAfter: 50 });
     const lock = ddbMock.commandCalls(UpdateCommand)[0].args[0].input;
     expect(lock.ConditionExpression).toContain('rechargeInProgress');
+    expect(lock.ConditionExpression).toContain('rechargeLockedAt < :staleBefore');
     expect(createRechargePaymentIntent).toHaveBeenCalledWith({
       userId: 'u1', customerId: 'cus_1', paymentMethodId: 'pm_1',
     });
@@ -108,5 +120,22 @@ describe('maybeTriggerAutoRecharge', () => {
     const updates = ddbMock.commandCalls(UpdateCommand);
     expect(updates).toHaveLength(2); // lock + clear
     expect(updates[1].args[0].input.ExpressionAttributeValues![':false']).toBe(false);
+  });
+});
+
+describe('listLedgerEntries', () => {
+  it('returns entries newest-first regardless of SK shape, sliced to limit', async () => {
+    ddbMock.on(QueryCommand).resolves({
+      Items: [
+        { entryId: '2026-06-10T00:00:00.000Z#a', createdAt: '2026-06-10T00:00:00.000Z' },
+        { entryId: 'stripe#pi_2', createdAt: '2026-06-12T00:00:00.000Z' },
+        { entryId: 'stripe#pi_1', createdAt: '2026-06-11T00:00:00.000Z' },
+      ],
+    });
+    const entries = await listLedgerEntries('u1', 2);
+    expect(entries.map((e: any) => e.createdAt)).toEqual([
+      '2026-06-12T00:00:00.000Z',
+      '2026-06-11T00:00:00.000Z',
+    ]);
   });
 });
