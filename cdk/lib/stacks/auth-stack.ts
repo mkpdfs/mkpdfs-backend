@@ -71,6 +71,9 @@ export class AuthStack extends cdk.Stack {
     // -----------------------------------------------------------------
     this.userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: `mkpdfs-${cfg.environment}-user-pool`,
+      // CDK defaults this to false (CFN defaults to allowed) — the legacy
+      // pool accepted self-registration, so make it explicit.
+      selfSignUpEnabled: true,
       signInAliases: { email: true },
       autoVerify: { email: true },
       standardAttributes: {

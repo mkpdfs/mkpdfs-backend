@@ -57,12 +57,16 @@ export function getEnvConfig(environment: string): EnvConfig {
   const callbackUrls = [
     'http://localhost:3000/callback',
     'https://mkpdfs.com/callback',
-    ...(isProd ? [] : ['https://dev.mkpdfs.com/callback']),
+    ...(isProd
+      ? []
+      : ['https://dev.mkpdfs.com/callback', 'http://localhost:3003/callback']),
   ];
   const logoutUrls = [
     'http://localhost:3000/logout',
     'https://mkpdfs.com/logout',
-    ...(isProd ? [] : ['https://dev.mkpdfs.com/logout']),
+    ...(isProd
+      ? []
+      : ['https://dev.mkpdfs.com/logout', 'http://localhost:3003/logout']),
   ];
   return {
     environment,
