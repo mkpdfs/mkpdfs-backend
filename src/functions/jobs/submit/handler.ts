@@ -2,7 +2,7 @@ import { ValidatedEventAPIGatewayProxyEvent, formatJSONResponse, formatErrorResp
 import { middyfy } from '@libs/lambda';
 import { dualAuthMiddleware } from '@libs/middleware/dualAuth';
 import { subscriptionMiddleware } from '@libs/middleware/subscription';
-import { checkLimitsMiddleware } from '@libs/middleware/usageTracking';
+import { checkCreditsMiddleware } from '@libs/middleware/credits';
 import { WebhookService } from '@libs/services/webhookService';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -146,8 +146,8 @@ const submitJob: ValidatedEventAPIGatewayProxyEvent<SubmitJobRequest> = async (e
   }
 };
 
-// Note: No usageTrackingMiddleware here - usage is tracked when job completes
+// Note: No debit here — credits are debited when the job completes (process handler)
 export const main = middyfy(submitJob)
   .use(dualAuthMiddleware())
   .use(subscriptionMiddleware())
-  .use(checkLimitsMiddleware('pdf_generation'));
+  .use(checkCreditsMiddleware());

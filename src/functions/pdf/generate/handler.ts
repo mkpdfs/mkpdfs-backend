@@ -2,7 +2,8 @@ import { ValidatedEventAPIGatewayProxyEvent, formatJSONResponse, formatErrorResp
 import { middyfy } from '@libs/lambda';
 import { dualAuthMiddleware } from '@libs/middleware/dualAuth';
 import { subscriptionMiddleware } from '@libs/middleware/subscription';
-import { checkLimitsMiddleware, usageTrackingMiddleware } from '@libs/middleware/usageTracking';
+import { usageTrackingMiddleware } from '@libs/middleware/usageTracking';
+import { checkCreditsMiddleware, debitCreditsMiddleware } from '@libs/middleware/credits';
 import { PdfService } from '@libs/services/pdfService';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
@@ -102,5 +103,6 @@ export const generatePdf: ValidatedEventAPIGatewayProxyEvent<GeneratePdfRequest>
 export const main = middyfy(generatePdf)
   .use(dualAuthMiddleware())
   .use(subscriptionMiddleware())
-  .use(checkLimitsMiddleware('pdf_generation'))
-  .use(usageTrackingMiddleware({ actionType: 'pdf_generation' }));
+  .use(checkCreditsMiddleware())
+  .use(usageTrackingMiddleware({ actionType: 'pdf_generation' }))
+  .use(debitCreditsMiddleware());
