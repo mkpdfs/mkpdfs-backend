@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { WELCOME_CREDITS } from '../creditConstants';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -44,14 +45,16 @@ export const subscriptionMiddleware = () => {
         
         let subscription = subscriptionData.Item;
         
-        // If no record, create the default credits billing record (balance 0)
+        // If no record, create the default credits billing record. New
+        // accounts get WELCOME_CREDITS free pages (no ledger entry: most
+        // routes lack ledger-table grants; the grant is implicit in creation)
         if (!subscription) {
           const now = new Date().toISOString();
           subscription = {
             userId,
             plan: 'credits',
             status: 'active',
-            creditBalance: 0,
+            creditBalance: WELCOME_CREDITS,
             autoRecharge: false,
             rechargeThreshold: 100,
             createdAt: now,
@@ -74,7 +77,7 @@ export const subscriptionMiddleware = () => {
               ExpressionAttributeValues: {
                 ':plan': 'credits',
                 ':status': 'active',
-                ':balance': 0,
+                ':balance': WELCOME_CREDITS,
                 ':autoRecharge': false,
                 ':threshold': 100,
                 ':createdAt': now,

@@ -2,3 +2,5 @@
 export const CREDITS_PER_PACK = 1000;
 export const PACK_PRICE_CENTS = 1000; // $10.00 USD
 export const DEFAULT_RECHARGE_THRESHOLD = 100;
+/** Free credits granted on account creation (the landing promises these). */
+export const WELCOME_CREDITS = 10;
