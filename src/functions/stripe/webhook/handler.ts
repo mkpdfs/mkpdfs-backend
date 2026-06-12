@@ -102,26 +102,42 @@ async function handlePurchaseCompleted(session: Stripe.Checkout.Session) {
   });
   console.log(`Purchase for user ${userId}: pi=${paymentIntentId} credited=${credited}`);
 
-  // Save the card for future off-session auto-recharges
-  const stripe = await getStripe();
-  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
-  const paymentMethodId = typeof pi.payment_method === 'string' ? pi.payment_method : pi.payment_method?.id;
-
+  // Persist plan/status/customer first — must land even if the payment-method
+  // retrieve below hiccups (a throw here would make Stripe replay the event)
   await docClient.send(new UpdateCommand({
     TableName: process.env.SUBSCRIPTIONS_TABLE!,
     Key: { userId },
     UpdateExpression:
-      'SET #plan = :plan, #status = :status, stripeCustomerId = :customerId, updatedAt = :now' +
-      (paymentMethodId ? ', stripePaymentMethodId = :pm' : ''),
+      'SET #plan = :plan, #status = :status, stripeCustomerId = :customerId, updatedAt = :now',
     ExpressionAttributeNames: { '#plan': 'plan', '#status': 'status' },
     ExpressionAttributeValues: {
       ':plan': 'credits',
       ':status': 'active',
       ':customerId': customerId,
       ':now': new Date().toISOString(),
-      ...(paymentMethodId ? { ':pm': paymentMethodId } : {}),
     },
   }));
+
+  // Save the card for future off-session auto-recharges (non-fatal: without
+  // it the account simply can't arm auto-recharge until the next purchase)
+  try {
+    const stripe = await getStripe();
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentMethodId =
+      typeof pi.payment_method === 'string' ? pi.payment_method : pi.payment_method?.id;
+    if (!paymentMethodId) {
+      console.warn(`No payment_method on purchase PI ${paymentIntentId} — auto-recharge will not arm for user ${userId}`);
+      return;
+    }
+    await docClient.send(new UpdateCommand({
+      TableName: process.env.SUBSCRIPTIONS_TABLE!,
+      Key: { userId },
+      UpdateExpression: 'SET stripePaymentMethodId = :pm, updatedAt = :now',
+      ExpressionAttributeValues: { ':pm': paymentMethodId, ':now': new Date().toISOString() },
+    }));
+  } catch (error) {
+    console.error(`Failed to save payment method for user ${userId} (auto-recharge will not arm):`, error);
+  }
 }
 
 async function handleRechargeSucceeded(pi: Stripe.PaymentIntent) {
