@@ -7,10 +7,10 @@ export const checkAILimitsMiddleware = () => {
       const limits = handler.event.subscriptionLimits;
       const usage = handler.event.currentUsage;
       const subscription = handler.event.subscription;
-      const plan = subscription?.plan || 'free';
+      const plan = subscription?.plan || 'credits';
 
-      // Free tier has no access
-      if (plan === 'free' || limits?.aiGenerationsPerMonth === 0) {
+      // AI is included for anyone with a positive credit balance (enterprise always)
+      if (plan !== 'enterprise' && (subscription?.creditBalance ?? 0) <= 0) {
         return {
           statusCode: 403,
           headers: {
@@ -20,10 +20,9 @@ export const checkAILimitsMiddleware = () => {
           },
           body: JSON.stringify({
             success: false,
-            error: 'UPGRADE_REQUIRED',
-            message: 'AI Template Generation requires a paid subscription',
-            upgradeRequired: true,
-            currentPlan: plan
+            error: 'INSUFFICIENT_CREDITS',
+            message: 'AI Template Generation requires a positive credit balance. Buy a credit pack ($10 = 1,000 PDFs) to unlock it.',
+            purchaseRequired: true
           })
         };
       }
