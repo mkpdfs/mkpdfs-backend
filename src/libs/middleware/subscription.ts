@@ -5,42 +5,25 @@ const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
 export interface SubscriptionLimits {
-  pagesPerMonth: number;  // Each data object = 1 page
   templatesAllowed: number;
   apiTokensAllowed: number;
   maxPdfSizeMB: number;
-  aiGenerationsPerMonth: number;  // AI template generations per month
+  aiGenerationsPerMonth: number; // fixed monthly quota, requires creditBalance > 0
 }
 
 export const SUBSCRIPTION_PLANS: Record<string, SubscriptionLimits> = {
-  free: {
-    pagesPerMonth: 100,
-    templatesAllowed: 5,
-    apiTokensAllowed: 1,
-    maxPdfSizeMB: 10,
-    aiGenerationsPerMonth: 0  // No AI access
-  },
-  starter: {
-    pagesPerMonth: 1000,
-    templatesAllowed: 50,
-    apiTokensAllowed: 3,
-    maxPdfSizeMB: 25,
-    aiGenerationsPerMonth: 10  // Increased from 1 to 10
-  },
-  professional: {
-    pagesPerMonth: 10000,
+  credits: {
     templatesAllowed: 500,
     apiTokensAllowed: 10,
     maxPdfSizeMB: 50,
-    aiGenerationsPerMonth: 15
+    aiGenerationsPerMonth: 15,
   },
   enterprise: {
-    pagesPerMonth: -1, // unlimited
     templatesAllowed: -1, // unlimited
-    apiTokensAllowed: -1, // unlimited
+    apiTokensAllowed: -1,
     maxPdfSizeMB: 100,
-    aiGenerationsPerMonth: -1  // unlimited
-  }
+    aiGenerationsPerMonth: -1,
+  },
 };
 
 export const subscriptionMiddleware = () => {
@@ -61,29 +44,39 @@ export const subscriptionMiddleware = () => {
         
         let subscription = subscriptionData.Item;
         
-        // If no subscription, create a free tier subscription
+        // If no record, create the default credits billing record (balance 0)
         if (!subscription) {
+          const now = new Date().toISOString();
           subscription = {
             userId,
-            plan: 'free',
+            plan: 'credits',
             status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            creditBalance: 0,
+            autoRecharge: false,
+            rechargeThreshold: 100,
+            createdAt: now,
+            updatedAt: now
           };
-          
+
           await docClient.send(new UpdateCommand({
             TableName: process.env.SUBSCRIPTIONS_TABLE!,
             Key: { userId },
-            UpdateExpression: 'SET #plan = :plan, #status = :status, createdAt = :createdAt, updatedAt = :updatedAt',
+            UpdateExpression:
+              'SET #plan = :plan, #status = :status, creditBalance = :balance, ' +
+              'autoRecharge = :autoRecharge, rechargeThreshold = :threshold, ' +
+              'createdAt = :createdAt, updatedAt = :updatedAt',
             ExpressionAttributeNames: {
               '#plan': 'plan',
               '#status': 'status'
             },
             ExpressionAttributeValues: {
-              ':plan': 'free',
+              ':plan': 'credits',
               ':status': 'active',
-              ':createdAt': subscription.createdAt,
-              ':updatedAt': subscription.updatedAt
+              ':balance': 0,
+              ':autoRecharge': false,
+              ':threshold': 100,
+              ':createdAt': now,
+              ':updatedAt': now
             }
           }));
         }
@@ -123,14 +116,17 @@ export const subscriptionMiddleware = () => {
         
         // Attach subscription and usage to event
         handler.event.subscription = subscription;
-        handler.event.subscriptionLimits = SUBSCRIPTION_PLANS[subscription.plan] || SUBSCRIPTION_PLANS.free;
+        handler.event.subscriptionLimits =
+          subscription.plan === 'enterprise'
+            ? SUBSCRIPTION_PLANS.enterprise
+            : SUBSCRIPTION_PLANS.credits;
         handler.event.currentUsage = usage;
         
       } catch (error) {
         console.error('Error checking subscription:', error);
-        // Don't fail the request, just use free tier limits
-        handler.event.subscription = { plan: 'free', status: 'active' };
-        handler.event.subscriptionLimits = SUBSCRIPTION_PLANS.free;
+        // Fail closed for credits: a DDB read error must not grant free PDFs
+        handler.event.subscription = { plan: 'credits', status: 'active', creditBalance: 0 };
+        handler.event.subscriptionLimits = SUBSCRIPTION_PLANS.credits;
         handler.event.currentUsage = { pdfCount: 0, totalSizeMB: 0 };
       }
     }
