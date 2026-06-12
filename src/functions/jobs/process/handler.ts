@@ -3,6 +3,7 @@ import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from '@aws-sdk/lib-
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { PdfService } from '@libs/services/pdfService';
 import { WebhookService } from '@libs/services/webhookService';
+import { debitCredits, maybeTriggerAutoRecharge, BillingRecord } from '@libs/services/creditService';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -100,6 +101,10 @@ const processRecord = async (record: SQSRecord): Promise<void> => {
     // Track usage
     await trackUsage(userId, pageCount, result.sizeBytes);
 
+    // Debit credits (job was gated at submit; balance can briefly go negative
+    // if it was spent between submit and process — accepted for v1)
+    await debitForJob(userId, pageCount);
+
     // Get full job record for webhook
     const jobRecord = await getJob(jobId);
 
@@ -172,6 +177,26 @@ const trackUsage = async (userId: string, pageCount: number, sizeBytes: number):
   } catch (error) {
     console.error('Failed to track usage:', error);
     // Don't throw - usage tracking failure shouldn't fail the job
+  }
+};
+
+const debitForJob = async (userId: string, pageCount: number): Promise<void> => {
+  try {
+    const billingData = await docClient.send(new GetCommand({
+      TableName: process.env.SUBSCRIPTIONS_TABLE,
+      Key: { userId }
+    }));
+    const billing = billingData.Item as BillingRecord | undefined;
+    if (!billing || billing.plan === 'enterprise') return;
+
+    const balanceAfter = await debitCredits({
+      userId,
+      amount: pageCount,
+      description: 'pdf_generation_async'
+    });
+    await maybeTriggerAutoRecharge({ billing, balanceAfter });
+  } catch (error) {
+    console.error('Failed to debit credits for job (job NOT failed):', error);
   }
 };
 
