@@ -3,6 +3,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { constructWebhookEvent, getStripe } from '@libs/services/stripeService';
 import { creditFromStripePayment } from '@libs/services/creditService';
+import { CREDITS_PER_PACK, PACK_PRICE_CENTS } from '@libs/creditConstants';
 import type Stripe from 'stripe';
 
 const dynamoClient = new DynamoDBClient({});
@@ -217,8 +218,9 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   const refunds = await stripe.refunds.list({ payment_intent: paymentIntentId, limit: 100 });
   for (const refund of refunds.data) {
-    if (refund.status && refund.status !== 'succeeded') continue;
-    const credits = refund.amount; // cents == credits ($10 pack = 1,000 credits = 1,000 cents)
+    if (refund.status !== 'succeeded') continue;
+    // Derive from constants (today 1 cent == 1 credit, but don't bake that in)
+    const credits = Math.round((refund.amount * CREDITS_PER_PACK) / PACK_PRICE_CENTS);
     const { credited } = await creditFromStripePayment({
       userId,
       paymentIntentId: refund.id, // dedupe key for this clawback
