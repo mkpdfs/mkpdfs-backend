@@ -52,6 +52,21 @@ describe('creditFromStripePayment', () => {
     });
     expect(res.credited).toBe(false);
   });
+
+  it('applies refunds as negative adjustments keyed by refund id', async () => {
+    ddbMock.on(TransactWriteCommand).resolves({});
+    const res = await creditFromStripePayment({
+      userId: 'u1', paymentIntentId: 're_1', type: 'refund', amount: -1000,
+    });
+    expect(res.credited).toBe(true);
+    const tx = ddbMock.commandCalls(TransactWriteCommand)[0].args[0].input;
+    expect(tx.TransactItems![0].Put!.Item!.entryId).toBe('stripe#re_1');
+    expect(tx.TransactItems![0].Put!.Item!.type).toBe('refund');
+    expect(tx.TransactItems![0].Put!.Item!.amount).toBe(-1000);
+    // ADD of a negative amount may drive the balance below zero — by design
+    expect(tx.TransactItems![1].Update!.ExpressionAttributeValues![':amount']).toBe(-1000);
+    expect(tx.TransactItems![1].Update!.ConditionExpression).toBeUndefined();
+  });
 });
 
 describe('debitCredits', () => {

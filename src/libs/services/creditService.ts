@@ -15,7 +15,7 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
 const RECHARGE_LOCK_STALE_MS = 15 * 60 * 1000; // webhook normally clears the lock in seconds
 
-export type CreditType = 'purchase' | 'auto_recharge';
+export type CreditType = 'purchase' | 'auto_recharge' | 'refund';
 
 export interface BillingRecord {
   userId: string;
@@ -32,10 +32,15 @@ export interface BillingRecord {
 }
 
 /**
- * Idempotently credit a Stripe payment. A single transaction writes the
- * ledger entry (conditional — the dedup key is `stripe#<paymentIntentId>`)
- * and increments the balance, so a redelivered webhook credits exactly once
+ * Idempotently apply a Stripe-driven balance change. A single transaction
+ * writes the ledger entry (conditional — the dedup key is `stripe#<id>`)
+ * and adjusts the balance, so a redelivered webhook applies exactly once
  * and a crash can never apply one half without the other.
+ *
+ * `paymentIntentId` is the dedupe id: a PaymentIntent id (`pi_…`) for
+ * purchases/recharges, a Refund id (`re_…`) for refunds. Refunds pass a
+ * NEGATIVE `amount` — the balance may go negative (user already spent the
+ * refunded credits); the 402 gate then blocks until they buy again.
  */
 export async function creditFromStripePayment(params: {
   userId: string;

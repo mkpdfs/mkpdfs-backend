@@ -67,6 +67,12 @@ const handler: APIGatewayProxyHandler = async (event): Promise<APIGatewayProxyRe
         break;
       }
 
+      case 'charge.refunded': {
+        const charge = stripeEvent.data.object as Stripe.Charge;
+        await handleChargeRefunded(charge);
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${stripeEvent.type}`);
     }
@@ -183,6 +189,44 @@ async function handleRechargeFailed(pi: Stripe.PaymentIntent) {
       ':now': new Date().toISOString(),
     },
   }));
+}
+
+/**
+ * Refund → claw back the credits. At our price point 1,000 credits = 1,000
+ * cents, so refunded cents == refunded credits (partial refunds prorate
+ * naturally). Each Refund object is applied once (dedupe key = refund id);
+ * the balance MAY go negative — the 402 gate blocks generation until the
+ * user buys again. Refunds are listed from the API (authoritative) rather
+ * than trusted from the event payload.
+ */
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  const paymentIntentId =
+    typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
+  if (!paymentIntentId) {
+    console.log(`Refunded charge ${charge.id} has no PaymentIntent — ignoring`);
+    return;
+  }
+
+  const stripe = await getStripe();
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+  const userId = pi.metadata?.userId;
+  if (!userId) {
+    console.log(`Refunded charge ${charge.id}: PI ${paymentIntentId} has no userId metadata — not a credits payment, ignoring`);
+    return;
+  }
+
+  const refunds = await stripe.refunds.list({ payment_intent: paymentIntentId, limit: 100 });
+  for (const refund of refunds.data) {
+    if (refund.status && refund.status !== 'succeeded') continue;
+    const credits = refund.amount; // cents == credits ($10 pack = 1,000 credits = 1,000 cents)
+    const { credited } = await creditFromStripePayment({
+      userId,
+      paymentIntentId: refund.id, // dedupe key for this clawback
+      type: 'refund',
+      amount: -credits,
+    });
+    console.log(`Refund ${refund.id} for user ${userId}: -${credits} credits applied=${credited}`);
+  }
 }
 
 export const main = handler;
