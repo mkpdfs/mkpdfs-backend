@@ -34,8 +34,8 @@ CI: push `dev` → CDK deploy dev; push `main` → CDK deploy prod (`.github/wor
 - **Dual Authentication**: 
   - AWS_IAM (Cognito) for web applications
   - API tokens (`tlfy_` prefix) for programmatic access
-- **Usage Tracking**: Monthly usage tracked per user with subscription limits
-- **Subscription Tiers**: Free, Starter, Professional, Enterprise
+- **Billing**: prepaid credits ($10 = 1,000 credits, 1 credit = 1 PDF page, never expire; 10 welcome credits on signup). Plans: `credits` (default) | `enterprise` (unlimited, manual). Monthly usage table is stats-only.
+- **Credit gate**: `checkCreditsMiddleware` → 402; debit on HTTP 200 (`debitCreditsMiddleware`) or in the SQS job processor; opt-in auto-recharge via off-session Stripe PaymentIntent (see `src/libs/services/creditService.ts`)
 
 ### Lambda Functions
 
@@ -76,22 +76,22 @@ CI: push `dev` → CDK deploy dev; push `main` → CDK deploy prod (`.github/wor
 - Attaches user info to request context
 
 #### Subscription Middleware (`src/libs/middleware/subscription.ts`)
-- Auto-creates free tier subscription for new users
-- Validates subscription status
+- Auto-creates the `credits` billing record for new users (`creditBalance: WELCOME_CREDITS`, conditional write — never clobbers a concurrent webhook credit)
+- Validates status (missing status = active, for webhook-seeded rows)
 - Attaches limits to request context:
   ```typescript
   type SubscriptionLimits = {
-    maxPdfsPerMonth: number
-    maxTemplates: number
-    maxApiTokens: number
+    templatesAllowed: number
+    apiTokensAllowed: number
     maxPdfSizeMB: number
+    aiGenerationsPerMonth: number  // fixed quota, needs creditBalance > 0
   }
   ```
 
-#### Usage Tracking Middleware
-- `checkLimitsMiddleware`: Pre-request validation against subscription limits
-- `usageTrackingMiddleware`: Post-request usage recording
-- Tracks: PDF count, total size, template count, token count
+#### Credits & Usage Middleware
+- `checkCreditsMiddleware` (`src/libs/middleware/credits.ts`): pre-request 402 gate vs `creditBalance` (enterprise bypasses)
+- `debitCreditsMiddleware`: post-request debit on HTTP 200 + auto-recharge trigger
+- `usageTrackingMiddleware`: post-request monthly stats (never blocks)
 
 #### PDF Service (`src/libs/services/pdfService.ts`)
 - Template retrieval from S3
@@ -313,15 +313,14 @@ Frontend                          Backend                         AWS
 - Custom domain support via Route53
 
 #### Middleware Stack (Middy)
-All handlers use standardized middleware:
+All handlers use standardized middleware (PDF generation chain shown):
 ```typescript
-middy(handler)
-  .use(errorHandler())
-  .use(httpJsonBodyParser())
-  .use(dualAuthMiddleware({ allowToken: true }))
+middyfy(handler)
+  .use(dualAuthMiddleware())
   .use(subscriptionMiddleware())
-  .use(checkLimitsMiddleware({ resource: 'pdf' }))
-  .use(usageTrackingMiddleware({ operation: 'generatePdf' }))
+  .use(checkCreditsMiddleware())
+  .use(usageTrackingMiddleware({ actionType: 'pdf_generation' }))
+  .use(debitCreditsMiddleware())
 ```
 
 ### Deployment Prerequisites
