@@ -534,6 +534,14 @@ export class ApiStack extends cdk.Stack {
     // =================================================================
     // Outputs
     // =================================================================
+    // Deploy-time SSM refs (stripe-price-credits-1000) only re-resolve when
+    // CFN sees a template change — bump this value after editing the param
+    // so the next CI deploy picks the new price id.
+    new cdk.CfnOutput(this, 'StripePriceParamGeneration', {
+      value: 'credits-1000-gen2',
+      description: 'Bump to force re-resolution of deploy-time Stripe SSM params',
+    });
+
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: this.api.url,
       description: 'execute-api URL (direct, bypasses the custom domain)',
