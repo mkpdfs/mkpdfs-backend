@@ -58,31 +58,47 @@ export const subscriptionMiddleware = () => {
             updatedAt: now
           };
 
-          await docClient.send(new UpdateCommand({
-            TableName: process.env.SUBSCRIPTIONS_TABLE!,
-            Key: { userId },
-            UpdateExpression:
-              'SET #plan = :plan, #status = :status, creditBalance = :balance, ' +
-              'autoRecharge = :autoRecharge, rechargeThreshold = :threshold, ' +
-              'createdAt = :createdAt, updatedAt = :updatedAt',
-            ExpressionAttributeNames: {
-              '#plan': 'plan',
-              '#status': 'status'
-            },
-            ExpressionAttributeValues: {
-              ':plan': 'credits',
-              ':status': 'active',
-              ':balance': 0,
-              ':autoRecharge': false,
-              ':threshold': 100,
-              ':createdAt': now,
-              ':updatedAt': now
+          try {
+            await docClient.send(new UpdateCommand({
+              TableName: process.env.SUBSCRIPTIONS_TABLE!,
+              Key: { userId },
+              UpdateExpression:
+                'SET #plan = :plan, #status = :status, creditBalance = :balance, ' +
+                'autoRecharge = :autoRecharge, rechargeThreshold = :threshold, ' +
+                'createdAt = :createdAt, updatedAt = :updatedAt',
+              ConditionExpression: 'attribute_not_exists(userId)',
+              ExpressionAttributeNames: {
+                '#plan': 'plan',
+                '#status': 'status'
+              },
+              ExpressionAttributeValues: {
+                ':plan': 'credits',
+                ':status': 'active',
+                ':balance': 0,
+                ':autoRecharge': false,
+                ':threshold': 100,
+                ':createdAt': now,
+                ':updatedAt': now
+              }
+            }));
+          } catch (err: any) {
+            if (err.name === 'ConditionalCheckFailedException') {
+              // Lost the create race (concurrent request or webhook credit
+              // landed first) — re-read instead of clobbering the real row
+              const reread = await docClient.send(new GetCommand({
+                TableName: process.env.SUBSCRIPTIONS_TABLE!,
+                Key: { userId }
+              }));
+              subscription = reread.Item || subscription;
+            } else {
+              throw err;
             }
-          }));
+          }
         }
         
-        // Check if subscription is active
-        if (subscription.status !== 'active') {
+        // A row created by a webhook credit before the user's first request
+        // has no status attribute — treat missing status as active
+        if (subscription.status && subscription.status !== 'active') {
           return {
             statusCode: 402,
             headers: {
