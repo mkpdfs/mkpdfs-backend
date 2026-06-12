@@ -52,6 +52,9 @@ export const generatePdf: ValidatedEventAPIGatewayProxyEvent<GeneratePdfRequest>
     (event as any).pageCount = pageCount;
 
     if (async) {
+      // NOTE: this deprecated path returns 200, so debitCreditsMiddleware
+      // bills at submission time. If generatePdfAsync (currently a stub) is
+      // ever revived, it must NOT debit again on completion.
       // Invoke async Lambda with pageCount for usage tracking.
       // GENERATE_PDF_ASYNC_FUNCTION_NAME is injected by CDK with the real
       // function name; the legacy `${service}-${stage}-generatePdfAsync`
