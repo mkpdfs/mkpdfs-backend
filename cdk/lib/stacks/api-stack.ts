@@ -50,6 +50,10 @@ export interface ApiStackProps extends cdk.StackProps {
  */
 export class ApiStack extends cdk.Stack {
   public readonly api: apigateway.RestApi;
+  /** Billing-critical lambdas exposed for the Monitoring stack. */
+  public readonly stripeWebhookFn: lambdaNode.NodejsFunction;
+  public readonly generatePdfFn: lambdaNode.NodejsFunction;
+  public readonly generatePdfApiKeyFn: lambdaNode.NodejsFunction;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -366,6 +370,11 @@ export class ApiStack extends cdk.Stack {
     tables.creditLedger.grantWriteData(stripeWebhook); // idempotent credit txn
     grantSsmParams(stripeWebhook, env); // secret-key + webhook-secret at runtime
     addRoute('/stripe/webhook', 'POST', stripeWebhook, false);
+
+    // Exposed for the Monitoring stack (billing-critical alarms)
+    this.stripeWebhookFn = stripeWebhook;
+    this.generatePdfFn = generatePdf;
+    this.generatePdfApiKeyFn = generatePdfApiKey;
 
     // =================================================================
     // BILLING (credits)

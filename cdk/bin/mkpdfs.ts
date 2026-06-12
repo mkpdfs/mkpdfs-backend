@@ -5,6 +5,7 @@ import { ApiStack } from '../lib/stacks/api-stack';
 import { AuthStack } from '../lib/stacks/auth-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
 import { JobsStack } from '../lib/stacks/jobs-stack';
+import { MonitoringStack } from '../lib/stacks/monitoring-stack';
 import { StorageStack } from '../lib/stacks/storage-stack';
 
 const app = new cdk.App();
@@ -52,7 +53,7 @@ const jobs = new JobsStack(app, `Mkpdfs-Jobs-${cfg.environment}`, {
 });
 
 // 4. API (REST + 28 HTTP lambdas + custom domain)
-new ApiStack(app, `Mkpdfs-Api-${cfg.environment}`, {
+const apiStack = new ApiStack(app, `Mkpdfs-Api-${cfg.environment}`, {
   ...stackProps,
   description: `mkpdfs REST API (${cfg.environment})`,
   cfg,
@@ -63,6 +64,26 @@ new ApiStack(app, `Mkpdfs-Api-${cfg.environment}`, {
   userPool: auth.userPool,
   userPoolClientId: auth.userPoolClient.userPoolClientId,
   identityPoolId: auth.identityPoolId,
+});
+
+// 5. Monitoring (alarms + dashboard; billing-flow focused)
+new MonitoringStack(app, `Mkpdfs-Monitoring-${cfg.environment}`, {
+  ...stackProps,
+  description: `mkpdfs CloudWatch alarms + dashboard (${cfg.environment})`,
+  cfg,
+  api: apiStack.api,
+  tables: database.tables,
+  dlqs: {
+    pdfGeneration: jobs.pdfGenerationDlq,
+    aiGeneration: jobs.aiGenerationDlq,
+  },
+  billingFns: {
+    stripeWebhook: apiStack.stripeWebhookFn,
+    generatePdf: apiStack.generatePdfFn,
+    generatePdfApiKey: apiStack.generatePdfApiKeyFn,
+    processJob: jobs.processJobFn,
+  },
+  alertEmail: 'aramis001@gmail.com',
 });
 
 app.synth();
