@@ -98,8 +98,8 @@ export interface CommonEnvOptions {
  * - STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET no longer hold plaintext
  *   values; the lambdas receive the SSM parameter NAME (`*_PARAM`) and
  *   resolve it at runtime with caching (src/libs/ssmParams.ts).
- * - Stripe price IDs (not secrets) keep deploy-time resolution via CFN
- *   SSM parameter, so the module-level PRICE_TO_PLAN maps keep working.
+ * - The single credits price ID (not a secret) keeps deploy-time resolution
+ *   via CFN SSM parameter so lambdas receive it as a plain env var at cold start.
  */
 export function buildCommonEnv(
   scope: Construct,
@@ -126,6 +126,7 @@ export function buildCommonEnv(
     RATE_LIMIT_TABLE: tables.rateLimits,
     AI_JOBS_TABLE: tables.aiJobs,
     CLI_AUTH_TABLE: tables.cliAuth,
+    CREDIT_LEDGER_TABLE: tables.creditLedger,
 
     ASSETS_BUCKET: bucketName(env),
     ASSETS_BUCKET_URL: `https://${bucketName(env)}.s3.${REGION}.amazonaws.com`,
@@ -136,13 +137,9 @@ export function buildCommonEnv(
 
     STRIPE_SECRET_KEY_PARAM: params.stripeSecretKey,
     STRIPE_WEBHOOK_SECRET_PARAM: params.stripeWebhookSecret,
-    STRIPE_PRICE_BASIC: ssm.StringParameter.valueForStringParameter(
+    STRIPE_PRICE_CREDITS_1000: ssm.StringParameter.valueForStringParameter(
       scope,
-      params.stripePriceBasic,
-    ),
-    STRIPE_PRICE_PROFESSIONAL: ssm.StringParameter.valueForStringParameter(
-      scope,
-      params.stripePriceProfessional,
+      params.stripePriceCredits1000,
     ),
     FRONTEND_URL: cfg.frontendUrl,
   };

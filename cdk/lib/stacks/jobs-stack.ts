@@ -11,6 +11,7 @@ import {
   createServiceFunction,
   grantBedrock,
   grantSes,
+  grantSsmParams,
 } from '../service-function';
 import { MkpdfsTables } from './database-stack';
 
@@ -124,9 +125,12 @@ export class JobsStack extends cdk.Stack {
     // jobs status updates + usage counters + template read/PDF write + email
     tables.jobs.grantReadWriteData(this.processJobFn);
     tables.usage.grantReadWriteData(this.processJobFn);
+    tables.subscriptions.grantReadWriteData(this.processJobFn); // credit debit
+    tables.creditLedger.grantWriteData(this.processJobFn);
     bucket.grantRead(this.processJobFn);
     bucket.grantPut(this.processJobFn);
     grantSes(this.processJobFn);
+    grantSsmParams(this.processJobFn, cfg.environment); // stripe key for auto-recharge
 
     // -----------------------------------------------------------------
     // processAIGeneration — SQS consumer, Bedrock + thumbnail (layer)

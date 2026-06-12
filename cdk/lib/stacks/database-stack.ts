@@ -18,6 +18,7 @@ export interface MkpdfsTables {
   rateLimits: dynamodb.Table;
   aiJobs: dynamodb.Table;
   cliAuth: dynamodb.Table;
+  creditLedger: dynamodb.Table;
 }
 
 /**
@@ -148,6 +149,15 @@ export class DatabaseStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // Credit ledger: audit trail + webhook idempotency (entryId is
+    // `stripe#<paymentIntentId>` for credits, `<ISO>#<uuid>` for debits)
+    const creditLedger = new dynamodb.Table(this, 'CreditLedgerTable', {
+      ...common,
+      tableName: names.creditLedger,
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'entryId', type: dynamodb.AttributeType.STRING },
+    });
+
     this.tables = {
       users,
       tokens,
@@ -159,6 +169,7 @@ export class DatabaseStack extends cdk.Stack {
       rateLimits,
       aiJobs,
       cliAuth,
+      creditLedger,
     };
 
     for (const [key, table] of Object.entries(this.tables)) {

@@ -92,6 +92,7 @@ export function tableNames(environment: EnvironmentName) {
     rateLimits: `${p}-rate-limits`,
     aiJobs: `${p}-ai-jobs`,
     cliAuth: `${p}-cli-auth`,
+    creditLedger: `${p}-credit-ledger`,
   };
 }
 
@@ -115,7 +116,6 @@ export function ssmParamNames(environment: EnvironmentName) {
   return {
     stripeSecretKey: `${p}/stripe-secret-key`,
     stripeWebhookSecret: `${p}/stripe-webhook-secret`,
-    stripePriceBasic: `${p}/stripe-price-basic`,
-    stripePriceProfessional: `${p}/stripe-price-professional`,
+    stripePriceCredits1000: `${p}/stripe-price-credits-1000`,
   };
 }

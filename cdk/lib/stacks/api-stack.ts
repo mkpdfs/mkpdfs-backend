@@ -285,6 +285,8 @@ export class ApiStack extends cdk.Stack {
     bucket.grantRead(generatePdf); // template read + presigned GET
     bucket.grantPut(generatePdf); // generated PDF
     grantSes(generatePdf); // sendEmail option
+    tables.creditLedger.grantWriteData(generatePdf); // debit ledger entries
+    grantSsmParams(generatePdf, env); // stripe-secret-key for auto-recharge
     // Enmienda 3: self-invoke by env-injected name, not the legacy hardcoded one
     generatePdf.addEnvironment(
       'GENERATE_PDF_ASYNC_FUNCTION_NAME',
@@ -306,6 +308,8 @@ export class ApiStack extends cdk.Stack {
     bucket.grantRead(generatePdfApiKey);
     bucket.grantPut(generatePdfApiKey);
     grantSes(generatePdfApiKey);
+    tables.creditLedger.grantWriteData(generatePdfApiKey); // debit ledger entries
+    grantSsmParams(generatePdfApiKey, env); // stripe-secret-key for auto-recharge
     generatePdfApiKey.addEnvironment(
       'GENERATE_PDF_ASYNC_FUNCTION_NAME',
       generatePdfAsync.functionName,
@@ -359,8 +363,24 @@ export class ApiStack extends cdk.Stack {
       entry: 'src/functions/stripe/webhook/handler.ts',
     });
     tables.subscriptions.grantReadWriteData(stripeWebhook);
+    tables.creditLedger.grantWriteData(stripeWebhook); // idempotent credit txn
     grantSsmParams(stripeWebhook, env); // secret-key + webhook-secret at runtime
     addRoute('/stripe/webhook', 'POST', stripeWebhook, false);
+
+    // =================================================================
+    // BILLING (credits)
+    // =================================================================
+    const billingUpdateAutoRecharge = makeFn('BillingUpdateAutoRechargeFn', {
+      entry: 'src/functions/billing/updateAutoRecharge/handler.ts',
+    });
+    tables.subscriptions.grantReadWriteData(billingUpdateAutoRecharge);
+    addRoute('/billing/auto-recharge', 'PUT', billingUpdateAutoRecharge, true);
+
+    const billingGetLedger = makeFn('BillingGetLedgerFn', {
+      entry: 'src/functions/billing/getLedger/handler.ts',
+    });
+    tables.creditLedger.grantReadData(billingGetLedger);
+    addRoute('/billing/ledger', 'GET', billingGetLedger, true);
 
     // =================================================================
     // MARKETPLACE (public browse, authenticated use)
