@@ -145,3 +145,10 @@ export async function getCustomer(
   const stripe = await getStripe();
   return stripe.customers.retrieve(customerId);
 }
+
+// TEMP — implemented for real in the credits rework (see plan Task 7)
+export async function createRechargePaymentIntent(_params: {
+  userId: string; customerId: string; paymentMethodId: string;
+}): Promise<{ id: string }> {
+  throw new Error('not implemented yet');
+}
