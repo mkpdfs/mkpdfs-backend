@@ -3,7 +3,7 @@ import { middyfy } from '@libs/lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { iamOnlyMiddleware } from '@libs/middleware/dualAuth';
-import { DEFAULT_RECHARGE_THRESHOLD } from '@libs/creditConstants';
+import { CREDITS_PER_PACK, DEFAULT_RECHARGE_THRESHOLD } from '@libs/creditConstants';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -21,8 +21,10 @@ const handler: ValidatedEventAPIGatewayProxyEvent<UpdateAutoRechargeRequest> = a
     if (typeof enabled !== 'boolean') {
       return formatErrorResponse(new Error('enabled (boolean) is required'), 400);
     }
-    if (threshold !== undefined && (!Number.isInteger(threshold) || threshold < 1)) {
-      return formatErrorResponse(new Error('threshold must be a positive integer'), 400);
+    // Cap at one pack: a threshold above CREDITS_PER_PACK would re-trigger a
+    // $10 recharge after every single debit, forever
+    if (threshold !== undefined && (!Number.isInteger(threshold) || threshold < 1 || threshold > CREDITS_PER_PACK)) {
+      return formatErrorResponse(new Error(`threshold must be an integer between 1 and ${CREDITS_PER_PACK}`), 400);
     }
 
     const data = await docClient.send(new GetCommand({
@@ -31,7 +33,13 @@ const handler: ValidatedEventAPIGatewayProxyEvent<UpdateAutoRechargeRequest> = a
     }));
     const billing = data.Item;
 
-    if (enabled && !billing?.stripePaymentMethodId) {
+    // Strict update — never upsert a partial ghost row that would block the
+    // subscription middleware's conditional seeding
+    if (!billing) {
+      return formatErrorResponse(new Error('No billing record yet'), 404);
+    }
+
+    if (enabled && !billing.stripePaymentMethodId) {
       return formatJSONResponse({
         success: false,
         error: 'NO_PAYMENT_METHOD',
@@ -40,14 +48,15 @@ const handler: ValidatedEventAPIGatewayProxyEvent<UpdateAutoRechargeRequest> = a
     }
 
     const newThreshold =
-      threshold ?? billing?.rechargeThreshold ?? DEFAULT_RECHARGE_THRESHOLD;
+      threshold ?? billing.rechargeThreshold ?? DEFAULT_RECHARGE_THRESHOLD;
 
+    // Toggling either way acknowledges a past recharge failure — clear it
     await docClient.send(new UpdateCommand({
       TableName: process.env.SUBSCRIPTIONS_TABLE!,
       Key: { userId },
       UpdateExpression:
         'SET autoRecharge = :enabled, rechargeThreshold = :threshold, updatedAt = :now' +
-        (enabled ? ' REMOVE autoRechargeError' : ''),
+        ' REMOVE autoRechargeError',
       ExpressionAttributeValues: {
         ':enabled': enabled,
         ':threshold': newThreshold,

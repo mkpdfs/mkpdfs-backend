@@ -13,8 +13,10 @@ const handler: ValidatedEventAPIGatewayProxyEvent<null> = async (event: any) => 
         entryId: e.entryId,
         type: e.type,
         amount: e.amount,
-        balanceAfter: e.balanceAfter,
-        description: e.description,
+        // Explicit null — purchase/auto_recharge entries don't carry these,
+        // and JSON.stringify would silently drop undefined keys
+        balanceAfter: e.balanceAfter ?? null,
+        description: e.description ?? null,
         createdAt: e.createdAt,
       })),
     });
