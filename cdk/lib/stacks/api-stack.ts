@@ -257,6 +257,23 @@ export class ApiStack extends cdk.Stack {
     grantSubscriptionMw(updateTemplate);
     addRoute('/templates/{templateId}', 'PUT', updateTemplate, true);
 
+    const logoUploadUrl = makeFn('LogoUploadUrlFn', {
+      entry: 'src/functions/templates/logoUploadUrl/handler.ts',
+      timeoutSeconds: 10,
+      memorySize: 256,
+    });
+    bucket.grantPut(logoUploadUrl); // presigned PUT for the logo file
+    grantSubscriptionMw(logoUploadUrl);
+    addRoute('/templates/logo-upload-url', 'POST', logoUploadUrl, true);
+
+    const updateTemplateTheme = makeFn('UpdateTemplateThemeFn', {
+      entry: 'src/functions/templates/updateTheme/handler.ts',
+    });
+    tables.templates.grantReadWriteData(updateTemplateTheme);
+    bucket.grantPut(updateTemplateTheme); // store URL-ingested logos
+    grantSubscriptionMw(updateTemplateTheme);
+    addRoute('/templates/{templateId}/theme', 'PATCH', updateTemplateTheme, true);
+
     const deleteTemplate = makeFn('DeleteTemplateFn', {
       entry: 'src/functions/templates/deleteTemplate/handler.ts',
     });
@@ -288,6 +305,7 @@ export class ApiStack extends cdk.Stack {
     grantUsageTracking(generatePdf);
     bucket.grantRead(generatePdf); // template read + presigned GET
     bucket.grantPut(generatePdf); // generated PDF
+    tables.templates.grantReadData(generatePdf); // pdfService reads the theme + contentVersion
     grantSes(generatePdf); // sendEmail option
     tables.creditLedger.grantWriteData(generatePdf); // debit ledger entries
     grantSsmParams(generatePdf, env); // stripe-secret-key for auto-recharge
@@ -311,6 +329,7 @@ export class ApiStack extends cdk.Stack {
     grantUsageTracking(generatePdfApiKey);
     bucket.grantRead(generatePdfApiKey);
     bucket.grantPut(generatePdfApiKey);
+    tables.templates.grantReadData(generatePdfApiKey);
     grantSes(generatePdfApiKey);
     tables.creditLedger.grantWriteData(generatePdfApiKey); // debit ledger entries
     grantSsmParams(generatePdfApiKey, env); // stripe-secret-key for auto-recharge

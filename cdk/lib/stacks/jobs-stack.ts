@@ -129,6 +129,7 @@ export class JobsStack extends cdk.Stack {
     tables.creditLedger.grantWriteData(this.processJobFn);
     bucket.grantRead(this.processJobFn);
     bucket.grantPut(this.processJobFn);
+    tables.templates.grantReadData(this.processJobFn); // pdfService reads the theme
     grantSes(this.processJobFn);
     grantSsmParams(this.processJobFn, cfg.environment); // stripe key for auto-recharge
 
