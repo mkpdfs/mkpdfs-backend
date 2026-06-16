@@ -26,12 +26,13 @@ const MARKETPLACE_TABLE = `mkpdfs-${stage}-marketplace`;
 const ASSETS_BUCKET = `mkpdfs-${stage}-bucket`;
 const TEMPLATES_DIR = path.join(__dirname, 'marketplace-templates');
 
-interface MarketplaceTemplate {
+export interface MarketplaceTemplate {
   templateId: string;
   category: 'business' | 'certificates' | 'marketing' | 'personal';
   name: string;
   description: string;
   s3Key: string;
+  thumbnailKey: string;
   sampleDataJson: string;
   tags: string[];
   popularity: number;
@@ -39,7 +40,7 @@ interface MarketplaceTemplate {
   updatedAt: string;
 }
 
-const templates: Omit<MarketplaceTemplate, 's3Key' | 'createdAt' | 'updatedAt'>[] = [
+export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'createdAt' | 'updatedAt'>[] = [
   // Business Documents
   {
     templateId: 'mp-business-invoice',
@@ -440,6 +441,7 @@ async function seedTemplates() {
 
   for (const template of templates) {
     const s3Key = `marketplace/templates/${template.templateId}.hbs`;
+    const thumbnailKey = `marketplace/thumbnails/${template.templateId}.png`;
     const templateFilePath = path.join(TEMPLATES_DIR, `${template.templateId}.hbs`);
 
     // Check if template file exists
@@ -467,6 +469,7 @@ async function seedTemplates() {
     const item: MarketplaceTemplate = {
       ...template,
       s3Key,
+      thumbnailKey,
       createdAt: now,
       updatedAt: now
     };
@@ -500,4 +503,8 @@ async function main() {
   }
 }
 
-main();
+// Guard: only run the destructive clear+seed when invoked directly,
+// so other scripts (e.g. generate-thumbnails.ts) can safely import `templates`.
+if (require.main === module) {
+  main();
+}

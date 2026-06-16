@@ -1,61 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Georgia', serif; color: #333; padding: 60px; line-height: 1.8; }
-    .letter { max-width: 700px; margin: 0 auto; }
-    .sender-info { margin-bottom: 40px; }
-    .sender-info p { font-size: 14px; margin-bottom: 2px; }
-    .sender-contact { margin-top: 10px; font-size: 13px; color: #666; }
-    .date { margin-bottom: 40px; font-size: 14px; }
-    .recipient-info { margin-bottom: 40px; }
-    .recipient-info p { font-size: 14px; margin-bottom: 2px; }
-    .subject { margin-bottom: 30px; }
-    .subject p { font-size: 14px; }
-    .subject strong { font-weight: 600; }
-    .salutation { margin-bottom: 20px; font-size: 15px; }
-    .body { margin-bottom: 40px; }
-    .body p { font-size: 15px; margin-bottom: 20px; text-align: justify; }
-    .closing { margin-bottom: 60px; font-size: 15px; }
-    .signature { font-size: 16px; }
-    .signature-name { font-family: 'Brush Script MT', cursive; font-size: 28px; color: #1e40af; margin-bottom: 5px; }
-    .signature-printed { font-size: 15px; font-weight: 600; }
-    hr { border: none; border-top: 1px solid #e5e7eb; margin: 30px 0; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 26mm 24mm;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Letterhead ---- */
+    .letterhead { padding-bottom: 22px; border-bottom: 1px solid var(--ink); }
+    .sender-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 30px; font-weight: 600; letter-spacing: -0.015em; line-height: 1;
+    }
+    .sender-meta {
+      margin-top: 12px; font-size: 11px; color: var(--muted); line-height: 1.7;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
+    }
+    .sender-meta .sep {
+      width: 3px; height: 3px; border-radius: 50%;
+      background: var(--faint); flex-shrink: 0;
+    }
+
+    /* ---- Date ---- */
+    .date {
+      margin-top: 30px; text-align: right;
+      font-size: 11.5px; color: var(--faint); font-weight: 600; letter-spacing: 0.04em;
+    }
+
+    /* ---- Recipient ---- */
+    .recipient { margin-top: 26px; font-size: 12.5px; line-height: 1.7; }
+    .recipient .rn { font-weight: 600; }
+    .recipient .rt { color: var(--muted); }
+    .recipient .rco { font-weight: 600; color: var(--accent); }
+    .recipient .rad { color: var(--muted); }
+
+    /* ---- Subject ---- */
+    .subject {
+      margin-top: 28px; font-size: 13.5px; font-weight: 600;
+      letter-spacing: -0.01em; color: var(--ink);
+    }
+
+    .salutation { margin-top: 24px; font-size: 12.5px; color: var(--ink); }
+
+    /* ---- Body ---- */
+    .body { margin-top: 16px; }
+    .body p {
+      font-size: 12.5px; line-height: 1.8; color: var(--ink);
+      margin-bottom: 16px; text-align: justify;
+    }
+
+    /* ---- Sign off ---- */
+    .signoff { margin-top: 34px; }
+    .signoff .close { font-size: 12.5px; color: var(--ink); margin-bottom: 26px; }
+    .sig-rule { width: 200px; height: 1px; background: var(--line); }
+    .signoff .sig {
+      margin-top: 8px;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
+    }
   </style>
 </head>
 <body>
-  <div class="letter">
-    <div class="sender-info">
-      <p><strong>{{senderName}}</strong></p>
-      <p>{{senderAddress}}</p>
-      <p>{{senderCity}}</p>
-      <div class="sender-contact">
-        <p>{{senderEmail}}</p>
-        <p>{{senderPhone}}</p>
+  <div class="page">
+    <div class="letterhead">
+      <div class="sender-name">{{senderName}}</div>
+      <div class="sender-meta">
+        <span>{{senderAddress}}</span>
+        <span class="sep"></span>
+        <span>{{senderCity}}</span>
+        <span class="sep"></span>
+        <span>{{senderEmail}}</span>
+        <span class="sep"></span>
+        <span>{{senderPhone}}</span>
       </div>
     </div>
 
-    <div class="date">
-      <p>{{date}}</p>
+    <div class="date">{{date}}</div>
+
+    <div class="recipient">
+      <div class="rn">{{recipientName}}</div>
+      <div class="rt">{{recipientTitle}}</div>
+      <div class="rco">{{recipientCompany}}</div>
+      <div class="rad">{{recipientAddress}}</div>
+      <div class="rad">{{recipientCity}}</div>
     </div>
 
-    <div class="recipient-info">
-      <p><strong>{{recipientName}}</strong></p>
-      <p>{{recipientTitle}}</p>
-      <p>{{recipientCompany}}</p>
-      <p>{{recipientAddress}}</p>
-      <p>{{recipientCity}}</p>
-    </div>
+    <div class="subject">{{subject}}</div>
 
-    <div class="subject">
-      <p><strong>Re: {{subject}}</strong></p>
-    </div>
-
-    <div class="salutation">
-      <p>{{salutation}},</p>
-    </div>
+    <div class="salutation">{{salutation}}</div>
 
     <div class="body">
       {{#each body}}
@@ -63,13 +123,10 @@
       {{/each}}
     </div>
 
-    <div class="closing">
-      <p>{{closing}},</p>
-    </div>
-
-    <div class="signature">
-      <div class="signature-name">{{signature}}</div>
-      <div class="signature-printed">{{senderName}}</div>
+    <div class="signoff">
+      <div class="close">{{closing}}</div>
+      <div class="sig-rule"></div>
+      <div class="sig">{{signature}}</div>
     </div>
   </div>
 </body>

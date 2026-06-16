@@ -1,68 +1,176 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f9ff; padding: 40px; }
-    .certificate { background: white; max-width: 800px; margin: 0 auto; padding: 50px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
-    .decoration { position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; opacity: 0.1; }
-    .decoration2 { position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; opacity: 0.1; }
-    .header { text-align: center; margin-bottom: 40px; position: relative; z-index: 1; }
-    .badge { display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 12px 30px; border-radius: 30px; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; }
-    .title { font-size: 36px; color: #1e3a8a; font-weight: 300; margin-bottom: 10px; }
-    .organizer { font-size: 16px; color: #3b82f6; font-weight: 500; }
-    .body { text-align: center; padding: 30px 0; position: relative; z-index: 1; }
-    .intro { font-size: 14px; color: #666; margin-bottom: 20px; }
-    .recipient { font-size: 42px; color: #1e3a8a; font-weight: 600; margin-bottom: 30px; }
-    .description { font-size: 16px; color: #333; line-height: 1.8; max-width: 500px; margin: 0 auto 30px; }
-    .event-card { display: inline-block; background: #f0f9ff; padding: 25px 40px; border-radius: 12px; border: 2px solid #bfdbfe; }
-    .event-name { font-size: 20px; color: #1e3a8a; font-weight: 600; margin-bottom: 10px; }
-    .event-details { font-size: 14px; color: #3b82f6; }
-    .event-details span { display: block; margin: 4px 0; }
-    .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-top: 30px; border-top: 1px solid #e5e7eb; position: relative; z-index: 1; }
-    .signature { text-align: center; }
-    .signature-line { width: 150px; border-top: 2px solid #3b82f6; padding-top: 8px; }
-    .signature-name { font-size: 14px; font-weight: 500; color: #333; }
-    .signature-title { font-size: 11px; color: #666; }
-    .qr-placeholder { width: 80px; height: 80px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-    .qr-placeholder span { font-size: 10px; color: #999; text-align: center; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 22mm 20mm;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Ceremonial double-rule frame ---- */
+    .frame {
+      flex: 1;
+      border: 1px solid var(--line);
+      padding: 4px;
+      display: flex;
+    }
+    .frame-inner {
+      flex: 1;
+      border: 1px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 26mm 22mm;
+    }
+
+    /* ---- Micro-labels ---- */
+    .kicker {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .lede { font-size: 12.5px; color: var(--muted); letter-spacing: 0.02em; }
+
+    /* ---- Title ---- */
+    .title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 30px; font-weight: 500; letter-spacing: 0.01em;
+      line-height: 1.1; margin-top: 14px;
+    }
+    .title-rule { width: 46px; height: 2px; background: var(--accent); margin: 20px auto 0; }
+
+    /* ---- Recipient ---- */
+    .recipient {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 58px; font-weight: 600; letter-spacing: -0.01em;
+      line-height: 1.05; margin: 8px 0;
+    }
+
+    /* ---- Event ---- */
+    .event {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 26px; font-weight: 500; line-height: 1.2; max-width: 130mm;
+      color: var(--accent);
+    }
+
+    /* ---- Detail row ---- */
+    .details {
+      display: flex; align-items: center; justify-content: center;
+      gap: 22px; margin-top: 6px;
+    }
+    .detail-item { text-align: center; }
+    .detail-label {
+      font-size: 9px; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 5px;
+    }
+    .detail-value { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+    .detail-sep { width: 1px; height: 30px; background: var(--hair); }
+
+    /* ---- Description ---- */
+    .description {
+      font-size: 12.5px; line-height: 1.7; color: var(--muted);
+      max-width: 120mm; margin: 0 auto;
+    }
+
+    /* ---- Seal ---- */
+    .seal { margin: 6px 0; }
+
+    /* ---- Signature ---- */
+    .sig-line { width: 220px; height: 1px; background: var(--ink); margin: 0 auto 9px; }
+    .sig-name { font-family: 'Fraunces', Georgia, serif; font-size: 17px; font-weight: 500; }
+    .sig-title {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--faint); margin-top: 4px;
+    }
+
+    .gap-l { height: 30px; }
+    .gap-m { height: 20px; }
+    .gap-s { height: 12px; }
   </style>
 </head>
 <body>
-  <div class="certificate">
-    <div class="decoration"></div>
-    <div class="decoration2"></div>
+  <div class="page">
+    <div class="frame">
+      <div class="frame-inner">
+        <div class="kicker">{{organizerName}}</div>
+        <div class="title">{{title}}</div>
+        <div class="title-rule"></div>
 
-    <div class="header">
-      <div class="badge">Official Certificate</div>
-      <h1 class="title">{{title}}</h1>
-      <div class="organizer">{{organizerName}}</div>
-    </div>
+        <div class="gap-l"></div>
 
-    <div class="body">
-      <div class="intro">This is to certify that</div>
-      <div class="recipient">{{recipientName}}</div>
-      <p class="description">{{description}}</p>
+        <div class="lede">This certifies that</div>
+        <div class="recipient">{{recipientName}}</div>
 
-      <div class="event-card">
-        <div class="event-name">{{eventName}}</div>
-        <div class="event-details">
-          <span>{{eventDate}}</span>
-          <span>{{eventLocation}}</span>
+        <div class="gap-s"></div>
+
+        <div class="lede">participated in</div>
+        <div class="gap-s"></div>
+        <div class="event">{{eventName}}</div>
+
+        <div class="gap-m"></div>
+
+        <div class="details">
+          <div class="detail-item">
+            <div class="detail-label">Date</div>
+            <div class="detail-value">{{eventDate}}</div>
+          </div>
+          <div class="detail-sep"></div>
+          <div class="detail-item">
+            <div class="detail-label">Location</div>
+            <div class="detail-value">{{eventLocation}}</div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <div class="footer">
-      <div class="signature">
-        <div class="signature-line">
-          <div class="signature-name">Event Director</div>
-          <div class="signature-title">{{organizerName}}</div>
+        <div class="gap-m"></div>
+
+        <div class="description">{{description}}</div>
+
+        <div class="gap-l"></div>
+
+        <div class="seal">
+          <svg width="84" height="84" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="42" cy="42" r="40" stroke="#8C6CFF" stroke-width="1"/>
+            <circle cx="42" cy="42" r="33" stroke="#8C6CFF" stroke-width="0.6" opacity="0.55"/>
+            <circle cx="42" cy="42" r="22" fill="#F3EFFF"/>
+            <path d="M34 42.5l5.5 5.5L51 36.5" stroke="#8C6CFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-      </div>
-      <div class="qr-placeholder">
-        <span>Verify Online</span>
+
+        <div class="gap-s"></div>
+
+        <div class="signature">
+          <div class="sig-line"></div>
+          <div class="sig-name">{{organizerName}}</div>
+          <div class="sig-title">Organizer</div>
+        </div>
       </div>
     </div>
   </div>

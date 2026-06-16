@@ -1,82 +1,194 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Courier New', monospace; color: #333; padding: 30px; max-width: 350px; margin: 0 auto; }
-    .header { text-align: center; padding-bottom: 20px; border-bottom: 2px dashed #333; margin-bottom: 20px; }
-    .header h1 { font-size: 20px; margin-bottom: 8px; }
-    .header p { font-size: 11px; line-height: 1.5; }
-    .receipt-info { display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #999; }
-    .receipt-info span { font-size: 11px; }
-    .items { margin-bottom: 20px; }
-    .item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
-    .item-name { flex: 1; }
-    .item-qty { width: 30px; text-align: center; }
-    .item-price { width: 60px; text-align: right; }
-    .divider { border-top: 1px dashed #999; margin: 15px 0; }
-    .totals .row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
-    .totals .row.total { font-size: 16px; font-weight: bold; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
-    .payment { text-align: center; margin: 20px 0; padding: 15px; background: #f5f5f5; }
-    .payment p { font-size: 11px; margin-bottom: 4px; }
-    .payment strong { font-size: 13px; }
-    .footer { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px dashed #333; }
-    .footer p { font-size: 14px; font-weight: bold; margin-bottom: 10px; }
-    .footer .small { font-size: 10px; color: #666; }
-    .barcode { text-align: center; margin-top: 20px; font-size: 10px; letter-spacing: 2px; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 22mm 20mm;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Receipt card (narrow, centered, upper portion) ---- */
+    .receipt {
+      width: 108mm;
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 34px 32px 28px;
+    }
+
+    /* ---- Masthead ---- */
+    .masthead { text-align: center; padding-bottom: 22px; border-bottom: 1px solid var(--hair); }
+    .brand-mark {
+      display: flex; align-items: center; justify-content: center;
+      gap: 11px; margin-bottom: 12px;
+    }
+    .brand-dot {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 600; font-size: 15px;
+      box-shadow: 0 4px 12px rgba(140, 108, 255, 0.28);
+      text-transform: uppercase;
+    }
+    .business-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 21px; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .business-address {
+      font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 2px;
+    }
+    .kicker {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 30px; font-weight: 500; letter-spacing: 0.02em;
+      margin-top: 16px;
+    }
+
+    /* ---- Meta ---- */
+    .meta {
+      display: flex; justify-content: center; gap: 30px;
+      padding: 18px 0 20px; border-bottom: 1px solid var(--hair);
+    }
+    .meta-cell { text-align: center; }
+    .meta-label {
+      font-size: 9px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 5px;
+    }
+    .meta-val { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+    /* ---- Items ---- */
+    .items { padding: 8px 0 4px; }
+    .item {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 11px 0; border-bottom: 1px solid var(--hair);
+    }
+    .item-main { display: flex; flex-direction: column; }
+    .item-name { font-size: 13px; font-weight: 500; }
+    .item-qty { font-size: 11px; color: var(--faint); margin-top: 3px; font-variant-numeric: tabular-nums; }
+    .item-total { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* ---- Summary ---- */
+    .summary { padding: 16px 0 4px; }
+    .summary-row {
+      display: flex; justify-content: space-between;
+      font-size: 12.5px; padding: 6px 0; color: var(--muted);
+    }
+    .summary-row span:last-child { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .totals-grand {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-top: 10px; padding: 14px 16px;
+      background: var(--accent-soft); border-radius: 10px;
+    }
+    .totals-grand .lbl {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .totals-grand .val {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 24px; font-weight: 600; color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- Footer ---- */
+    .pay-line {
+      display: flex; justify-content: center; align-items: center; gap: 8px;
+      margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--hair);
+    }
+    .pay-label {
+      font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--faint);
+    }
+    .pay-method { font-size: 12px; font-weight: 600; }
+    .thanks {
+      margin-top: 14px; text-align: center;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 14.5px; font-weight: 400; font-style: italic;
+      color: var(--muted); line-height: 1.5;
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>{{businessName}}</h1>
-    <p>{{businessAddress}}</p>
-  </div>
+  <div class="page">
+    <div class="receipt">
+      <div class="masthead">
+        <div class="brand-mark">
+          <div class="brand-dot">{{businessName.[0]}}</div>
+          <div class="business-name">{{businessName}}</div>
+        </div>
+        <div class="business-address">{{businessAddress}}</div>
+        <div class="kicker">Receipt</div>
+      </div>
 
-  <div class="receipt-info">
-    <span>{{date}} {{time}}</span>
-    <span>#{{receiptNumber}}</span>
-  </div>
+      <div class="meta">
+        <div class="meta-cell">
+          <div class="meta-label">Receipt No.</div>
+          <div class="meta-val">{{receiptNumber}}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">Date</div>
+          <div class="meta-val">{{date}}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-label">Time</div>
+          <div class="meta-val">{{time}}</div>
+        </div>
+      </div>
 
-  <div class="items">
-    {{#each items}}
-    <div class="item">
-      <span class="item-name">{{name}}</span>
-      <span class="item-qty">x{{quantity}}</span>
-      <span class="item-price">${{total}}</span>
+      <div class="items">
+        {{#each items}}
+        <div class="item">
+          <div class="item-main">
+            <span class="item-name">{{name}}</span>
+            <span class="item-qty">{{quantity}} &times; {{formatCurrency price}}</span>
+          </div>
+          <span class="item-total">{{formatCurrency total}}</span>
+        </div>
+        {{/each}}
+      </div>
+
+      <div class="summary">
+        <div class="summary-row"><span>Subtotal</span><span>{{formatCurrency subtotal}}</span></div>
+        <div class="summary-row"><span>Tax</span><span>{{formatCurrency tax}}</span></div>
+        <div class="totals-grand">
+          <span class="lbl">Total Paid</span>
+          <span class="val">{{formatCurrency total}}</span>
+        </div>
+      </div>
+
+      <div class="pay-line">
+        <span class="pay-label">Paid via</span>
+        <span class="pay-method">{{paymentMethod}}</span>
+      </div>
+
+      <div class="thanks">{{thankYouMessage}}</div>
     </div>
-    {{/each}}
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="totals">
-    <div class="row">
-      <span>Subtotal</span>
-      <span>${{subtotal}}</span>
-    </div>
-    <div class="row">
-      <span>Tax</span>
-      <span>${{tax}}</span>
-    </div>
-    <div class="row total">
-      <span>TOTAL</span>
-      <span>${{total}}</span>
-    </div>
-  </div>
-
-  <div class="payment">
-    <p>Payment Method</p>
-    <strong>{{paymentMethod}}</strong>
-  </div>
-
-  <div class="footer">
-    <p>{{thankYouMessage}}</p>
-    <p class="small">Please keep this receipt for your records</p>
-  </div>
-
-  <div class="barcode">
-    ||| |||| ||| |||| ||| ||||
   </div>
 </body>
 </html>

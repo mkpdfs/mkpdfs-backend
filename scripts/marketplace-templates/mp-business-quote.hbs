@@ -1,97 +1,251 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; padding: 40px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 3px solid #10b981; }
-    .company h1 { font-size: 24px; color: #10b981; margin-bottom: 4px; }
-    .quote-badge { background: #10b981; color: white; padding: 8px 24px; font-size: 20px; font-weight: bold; border-radius: 4px; }
-    .meta { display: flex; gap: 40px; margin-bottom: 30px; }
-    .meta-item { flex: 1; }
-    .meta-item label { display: block; font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 4px; }
-    .meta-item span { font-size: 14px; font-weight: 500; }
-    .client-box { background: #f0fdf4; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #10b981; }
-    .client-box h3 { font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px; }
-    .client-box p { font-size: 16px; font-weight: 500; }
-    .project-title { font-size: 20px; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb; }
-    .services { margin-bottom: 30px; }
-    .service { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid #e5e7eb; }
-    .service:nth-child(even) { background: #f9fafb; }
-    .service-info h4 { font-size: 14px; margin-bottom: 4px; }
-    .service-info p { font-size: 12px; color: #666; }
-    .service-price { font-size: 16px; font-weight: bold; color: #10b981; }
-    .total-section { display: flex; justify-content: flex-end; margin-bottom: 30px; }
-    .total-box { background: #10b981; color: white; padding: 20px 40px; border-radius: 8px; text-align: center; }
-    .total-box label { display: block; font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
-    .total-box span { font-size: 28px; font-weight: bold; }
-    .notes { background: #fef3c7; padding: 16px; border-radius: 8px; margin-bottom: 30px; }
-    .notes h4 { font-size: 12px; color: #92400e; margin-bottom: 8px; }
-    .notes p { font-size: 13px; color: #92400e; line-height: 1.5; }
-    .validity { text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px; }
-    .validity p { font-size: 13px; color: #666; }
-    .validity strong { color: #333; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 22mm 20mm;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Masthead ---- */
+    .masthead {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 12px;
+    }
+    .brand-dot {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 600; font-size: 15px;
+      box-shadow: 0 4px 12px rgba(140, 108, 255, 0.28);
+      text-transform: uppercase;
+    }
+    .company-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .company-tag {
+      font-size: 11.5px; color: var(--muted); line-height: 1.7;
+      letter-spacing: 0.04em;
+    }
+
+    .doc-label { text-align: right; }
+    .doc-label .kicker {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 34px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+    .doc-num {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    /* ---- Project banner ---- */
+    .project {
+      margin-top: 26px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--hair);
+    }
+    .project-label {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 8px;
+    }
+    .project-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 25px; font-weight: 600; letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    /* ---- Meta grid ---- */
+    .meta { display: flex; margin-top: 24px; margin-bottom: 34px; }
+    .meta-block { flex: 1; padding-right: 24px; }
+    .meta-block + .meta-block { padding-left: 24px; border-left: 1px solid var(--hair); }
+    .meta-label {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 7px;
+    }
+    .meta-value { font-size: 13px; line-height: 1.6; }
+    .meta-value strong { font-weight: 600; }
+    .meta-row { display: flex; justify-content: space-between; font-size: 12.5px; line-height: 1.9; }
+    .meta-row span:first-child { color: var(--muted); }
+
+    /* ---- Services ---- */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.11em;
+      text-transform: uppercase; color: var(--faint);
+      text-align: left; padding: 0 0 11px; border-bottom: 1px solid var(--ink);
+    }
+    thead th.num, tbody td.num { text-align: right; }
+    tbody td {
+      font-size: 13px; padding: 15px 0;
+      border-bottom: 1px solid var(--hair); vertical-align: top;
+    }
+    tbody td.service .svc-name { font-weight: 600; font-size: 13.5px; }
+    tbody td.service .svc-desc {
+      font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 4px;
+      max-width: 380px;
+    }
+    tbody td.amount {
+      color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums;
+      white-space: nowrap; padding-left: 18px;
+    }
+
+    /* ---- Totals ---- */
+    .totals { margin-top: 22px; margin-left: auto; width: 46%; }
+    .totals-grand {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 16px 18px;
+      background: var(--accent-soft); border-radius: 10px;
+    }
+    .totals-grand .lbl {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .totals-grand .val {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 26px; font-weight: 600; color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---- Footer ---- */
+    .footer { margin-top: auto; padding-top: 26px; }
+    .terms {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px;
+    }
+    .terms .tick {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      margin-top: 6px; flex-shrink: 0;
+    }
+    .terms-label {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 4px;
+    }
+    .terms-text { font-size: 12.5px; color: var(--ink); line-height: 1.55; }
+    .sign-off {
+      margin-top: 20px; text-align: center;
+      font-size: 11.5px; color: var(--faint); letter-spacing: 0.02em;
+    }
+    .sign-off strong { color: var(--muted); font-weight: 500; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="company">
-      <h1>{{companyName}}</h1>
-    </div>
-    <div class="quote-badge">QUOTE</div>
-  </div>
-
-  <div class="meta">
-    <div class="meta-item">
-      <label>Quote Number</label>
-      <span>{{quoteNumber}}</span>
-    </div>
-    <div class="meta-item">
-      <label>Date</label>
-      <span>{{quoteDate}}</span>
-    </div>
-    <div class="meta-item">
-      <label>Valid Until</label>
-      <span>{{validUntil}}</span>
-    </div>
-  </div>
-
-  <div class="client-box">
-    <h3>Prepared For</h3>
-    <p>{{clientName}}</p>
-  </div>
-
-  <h2 class="project-title">{{projectTitle}}</h2>
-
-  <div class="services">
-    {{#each services}}
-    <div class="service">
-      <div class="service-info">
-        <h4>{{name}}</h4>
-        <p>{{description}}</p>
+  <div class="page">
+    <div class="masthead">
+      <div>
+        <div class="brand-mark">
+          <div class="brand-dot">{{companyName.[0]}}</div>
+          <div class="company-name">{{companyName}}</div>
+        </div>
+        <div class="company-tag">Prepared exclusively for {{clientName}}</div>
       </div>
-      <div class="service-price">${{price}}</div>
+      <div class="doc-label">
+        <div class="kicker">Quote</div>
+        <div class="doc-num">{{quoteNumber}}</div>
+      </div>
     </div>
-    {{/each}}
-  </div>
 
-  <div class="total-section">
-    <div class="total-box">
-      <label>Total Quote</label>
-      <span>${{total}}</span>
+    <div class="project">
+      <div class="project-label">Project</div>
+      <div class="project-title">{{projectTitle}}</div>
     </div>
-  </div>
 
-  {{#if notes}}
-  <div class="notes">
-    <h4>Terms & Notes</h4>
-    <p>{{notes}}</p>
-  </div>
-  {{/if}}
+    <div class="meta">
+      <div class="meta-block">
+        <div class="meta-label">Prepared For</div>
+        <div class="meta-value"><strong>{{clientName}}</strong></div>
+      </div>
+      <div class="meta-block">
+        <div class="meta-label">Details</div>
+        <div class="meta-row"><span>Issued</span><span>{{quoteDate}}</span></div>
+        <div class="meta-row"><span>Valid Until</span><span>{{validUntil}}</span></div>
+        <div class="meta-row"><span>Reference</span><span>{{quoteNumber}}</span></div>
+      </div>
+    </div>
 
-  <div class="validity">
-    <p>This quote is valid until <strong>{{validUntil}}</strong>. Contact us to proceed with this quote.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th class="num">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each services}}
+        <tr>
+          <td class="service">
+            <div class="svc-name">{{name}}</div>
+            <div class="svc-desc">{{description}}</div>
+          </td>
+          <td class="num amount">{{formatCurrency price}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="totals-grand">
+        <span class="lbl">Estimated Total</span>
+        <span class="val">{{formatCurrency total}}</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="terms">
+        <div class="tick"></div>
+        <div>
+          <div class="terms-label">Notes</div>
+          <div class="terms-text">{{notes}}</div>
+        </div>
+      </div>
+      <div class="sign-off"><strong>We look forward to working with you.</strong></div>
+    </div>
   </div>
 </body>
 </html>

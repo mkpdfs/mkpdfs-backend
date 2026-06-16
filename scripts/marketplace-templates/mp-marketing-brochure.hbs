@@ -1,98 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; }
-    .brochure { max-width: 800px; margin: 0 auto; }
-    .hero { background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 60px 40px; text-align: center; }
-    .hero h1 { font-size: 48px; font-weight: 700; margin-bottom: 10px; }
-    .hero .tagline { font-size: 24px; font-weight: 300; opacity: 0.9; margin-bottom: 30px; }
-    .hero p { font-size: 18px; max-width: 500px; margin: 0 auto; line-height: 1.6; opacity: 0.8; }
-    .features { padding: 50px 40px; background: #f9fafb; }
-    .features h2 { text-align: center; font-size: 28px; color: #4f46e5; margin-bottom: 40px; }
-    .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
-    .feature { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .feature-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #7c3aed, #4f46e5); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-    .feature-icon span { color: white; font-size: 24px; }
-    .feature h3 { font-size: 18px; color: #333; margin-bottom: 10px; }
-    .feature p { font-size: 14px; color: #666; line-height: 1.6; }
-    .pricing { padding: 50px 40px; }
-    .pricing h2 { text-align: center; font-size: 28px; color: #333; margin-bottom: 40px; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .plan { border: 2px solid #e5e7eb; border-radius: 16px; padding: 30px; text-align: center; transition: all 0.3s; }
-    .plan.featured { border-color: #7c3aed; transform: scale(1.05); box-shadow: 0 10px 40px rgba(124, 58, 237, 0.2); }
-    .plan-name { font-size: 20px; color: #333; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-    .plan-price { font-size: 42px; color: #7c3aed; font-weight: 700; margin-bottom: 20px; }
-    .plan-price span { font-size: 16px; color: #666; font-weight: normal; }
-    .plan-features { list-style: none; margin-bottom: 30px; }
-    .plan-features li { padding: 8px 0; font-size: 14px; color: #666; border-bottom: 1px solid #f3f4f6; }
-    .plan-features li:last-child { border-bottom: none; }
-    .cta-section { background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 50px 40px; text-align: center; }
-    .cta-section h2 { font-size: 32px; margin-bottom: 20px; }
-    .cta-button { display: inline-block; background: white; color: #7c3aed; padding: 16px 40px; font-size: 18px; font-weight: 600; border-radius: 8px; text-decoration: none; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 22mm 20mm;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Hero ---- */
+    .kicker {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    }
+    .hero-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 52px; font-weight: 600; line-height: 1.02;
+      letter-spacing: -0.02em; max-width: 92%;
+    }
+    .hero-tagline {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 18px; font-weight: 400; font-style: italic;
+      color: var(--accent); margin-top: 14px; letter-spacing: -0.01em;
+    }
+    .hero-desc {
+      font-size: 13.5px; color: var(--muted); line-height: 1.7;
+      max-width: 80%; margin-top: 14px;
+    }
+    .hero-rule { height: 1px; background: var(--line); margin: 26px 0 24px; }
+
+    /* ---- Feature grid ---- */
+    .section-label {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 16px;
+    }
+    .feature-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px 24px; margin-bottom: 30px;
+    }
+    .feature {
+      padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px;
+    }
+    .feature-icon {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--accent); margin-bottom: 11px;
+      box-shadow: 0 3px 8px rgba(140, 108, 255, 0.30);
+    }
+    .feature-title {
+      font-size: 14px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 5px;
+    }
+    .feature-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+    /* ---- Pricing ---- */
+    .pricing {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px; margin-bottom: 28px;
+    }
+    .plan {
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 18px 16px; display: flex; flex-direction: column;
+    }
+    .plan.featured { background: var(--accent-soft); border-color: var(--accent); }
+    .plan-tag {
+      align-self: flex-start; font-size: 8.5px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: #fff; background: var(--accent); padding: 3px 8px;
+      border-radius: 100px; margin-bottom: 10px;
+    }
+    .plan-name {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 10px;
+    }
+    .plan.featured .plan-name { color: var(--accent); }
+    .plan-price {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 30px; font-weight: 600; letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .plan-per { font-size: 10.5px; color: var(--faint); margin: 6px 0 14px; }
+    .plan-feats { list-style: none; margin-top: 2px; }
+    .plan-feats li {
+      font-size: 11.5px; color: var(--ink); line-height: 1.4;
+      padding: 6px 0 6px 16px; position: relative;
+      border-top: 1px solid var(--hair);
+    }
+    .plan-feats li:first-child { border-top: none; }
+    .plan-feats li::before {
+      content: ''; position: absolute; left: 0; top: 11px;
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    }
+
+    /* ---- CTA ---- */
+    .cta { margin-top: auto; text-align: center; padding-top: 22px; }
+    .cta-btn {
+      display: inline-block;
+      font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
+      color: #fff; background: var(--accent);
+      padding: 16px 42px; border-radius: 100px;
+      box-shadow: 0 8px 22px rgba(140, 108, 255, 0.34);
+    }
+    .cta-url { margin-top: 12px; font-size: 11px; color: var(--faint); letter-spacing: 0.04em; }
   </style>
 </head>
 <body>
-  <div class="brochure">
-    <div class="hero">
-      <h1>{{productName}}</h1>
-      <div class="tagline">{{tagline}}</div>
-      <p>{{heroDescription}}</p>
-    </div>
+  <div class="page">
+    <div class="kicker">Product Overview</div>
+    <h1 class="hero-title">{{productName}}</h1>
+    <div class="hero-tagline">{{tagline}}</div>
+    <p class="hero-desc">{{heroDescription}}</p>
 
-    <div class="features">
-      <h2>Why Choose Us?</h2>
-      <div class="features-grid">
-        {{#each features}}
-        <div class="feature">
-          <div class="feature-icon">
-            <span>&#10003;</span>
-          </div>
-          <h3>{{title}}</h3>
-          <p>{{description}}</p>
-        </div>
-        {{/each}}
+    <div class="hero-rule"></div>
+
+    <div class="section-label">What you get</div>
+    <div class="feature-grid">
+      {{#each features}}
+      <div class="feature">
+        <div class="feature-icon"></div>
+        <div class="feature-title">{{title}}</div>
+        <div class="feature-desc">{{description}}</div>
       </div>
+      {{/each}}
     </div>
 
+    <div class="section-label">Plans &amp; pricing</div>
     <div class="pricing">
-      <h2>Simple, Transparent Pricing</h2>
-      <div class="pricing-grid">
-        <div class="plan">
-          <div class="plan-name">Starter</div>
-          <div class="plan-price">${{pricing.starter.price}}<span>/mo</span></div>
-          <ul class="plan-features">
-            {{#each pricing.starter.features}}
-            <li>{{this}}</li>
-            {{/each}}
-          </ul>
-        </div>
-        <div class="plan featured">
-          <div class="plan-name">Professional</div>
-          <div class="plan-price">${{pricing.professional.price}}<span>/mo</span></div>
-          <ul class="plan-features">
-            {{#each pricing.professional.features}}
-            <li>{{this}}</li>
-            {{/each}}
-          </ul>
-        </div>
-        <div class="plan">
-          <div class="plan-name">Enterprise</div>
-          <div class="plan-price">${{pricing.enterprise.price}}<span>/mo</span></div>
-          <ul class="plan-features">
-            {{#each pricing.enterprise.features}}
-            <li>{{this}}</li>
-            {{/each}}
-          </ul>
-        </div>
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">{{formatCurrency pricing.starter.price}}</div>
+        <div class="plan-per">per month</div>
+        <ul class="plan-feats">
+          {{#each pricing.starter.features}}
+          <li>{{this}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      <div class="plan featured">
+        <div class="plan-tag">Most popular</div>
+        <div class="plan-name">Professional</div>
+        <div class="plan-price">{{formatCurrency pricing.professional.price}}</div>
+        <div class="plan-per">per month</div>
+        <ul class="plan-feats">
+          {{#each pricing.professional.features}}
+          <li>{{this}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">{{formatCurrency pricing.enterprise.price}}</div>
+        <div class="plan-per">per month</div>
+        <ul class="plan-feats">
+          {{#each pricing.enterprise.features}}
+          <li>{{this}}</li>
+          {{/each}}
+        </ul>
       </div>
     </div>
 
-    <div class="cta-section">
-      <h2>Ready to Get Started?</h2>
-      <a href="{{ctaUrl}}" class="cta-button">{{ctaText}}</a>
+    <div class="cta">
+      <a class="cta-btn">{{ctaText}}</a>
+      <div class="cta-url">{{ctaUrl}}</div>
     </div>
   </div>
 </body>

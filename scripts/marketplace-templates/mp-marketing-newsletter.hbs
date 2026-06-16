@@ -1,75 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f3f4f6; padding: 20px; }
-    .newsletter { max-width: 600px; margin: 0 auto; background: white; }
-    .header { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 30px; text-align: center; }
-    .header h1 { font-size: 28px; margin-bottom: 5px; }
-    .header .meta { font-size: 12px; opacity: 0.8; }
-    .greeting { padding: 30px; border-bottom: 1px solid #e5e7eb; }
-    .greeting h2 { font-size: 22px; color: #333; margin-bottom: 15px; }
-    .greeting p { font-size: 15px; color: #666; line-height: 1.6; }
-    .articles { padding: 30px; }
-    .articles h3 { font-size: 14px; color: #0ea5e9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
-    .article { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #e5e7eb; }
-    .article:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .article h4 { font-size: 18px; color: #333; margin-bottom: 10px; }
-    .article p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 15px; }
-    .article a { display: inline-block; color: #0ea5e9; font-size: 14px; font-weight: 600; text-decoration: none; }
-    .article a:hover { text-decoration: underline; }
-    .cta-section { background: #f0f9ff; padding: 30px; text-align: center; margin: 0 30px 30px; border-radius: 12px; border: 2px solid #bae6fd; }
-    .cta-section h3 { font-size: 20px; color: #0369a1; margin-bottom: 10px; }
-    .cta-section p { font-size: 14px; color: #666; margin-bottom: 20px; }
-    .cta-button { display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; font-size: 14px; font-weight: 600; border-radius: 6px; text-decoration: none; }
-    .footer { background: #1e293b; color: white; padding: 30px; text-align: center; }
-    .footer p { font-size: 12px; opacity: 0.7; margin-bottom: 15px; }
-    .social-links { display: flex; justify-content: center; gap: 15px; }
-    .social-links a { display: inline-block; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 50%; line-height: 36px; color: white; text-decoration: none; font-size: 14px; }
-    .unsubscribe { margin-top: 20px; font-size: 11px; opacity: 0.5; }
-    .unsubscribe a { color: white; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 22mm 20mm;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Masthead ---- */
+    .masthead {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 16px; border-bottom: 1px solid var(--ink);
+    }
+    .brand-mark { display: flex; align-items: center; gap: 11px; }
+    .brand-dot {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 600; font-size: 15px;
+      box-shadow: 0 4px 12px rgba(140, 108, 255, 0.28);
+      text-transform: uppercase;
+    }
+    .company-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 22px; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .issue-meta { text-align: right; }
+    .issue-num {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent);
+    }
+    .issue-date { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+    /* ---- Greeting ---- */
+    .greeting {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 38px; font-weight: 600; letter-spacing: -0.02em;
+      line-height: 1.05; margin: 30px 0 14px;
+    }
+    .intro {
+      font-size: 13.5px; color: var(--muted); line-height: 1.7;
+      max-width: 88%; margin-bottom: 28px;
+    }
+
+    /* ---- Articles ---- */
+    .section-label {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 16px;
+    }
+    .articles { display: flex; flex-direction: column; gap: 0; }
+    .article {
+      padding: 18px 0; border-top: 1px solid var(--hair);
+    }
+    .article:first-child { border-top: none; padding-top: 0; }
+    .article-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+      line-height: 1.15; margin-bottom: 7px;
+    }
+    .article-summary {
+      font-size: 12.5px; color: var(--muted); line-height: 1.65; margin-bottom: 9px;
+    }
+    .read-more {
+      font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+
+    /* ---- CTA block ---- */
+    .cta {
+      margin-top: 26px;
+      background: var(--accent-soft); border-radius: 14px;
+      padding: 24px 26px; text-align: center;
+    }
+    .cta-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 7px;
+    }
+    .cta-text {
+      font-size: 12.5px; color: var(--muted); line-height: 1.6;
+      max-width: 80%; margin: 0 auto 16px;
+    }
+    .cta-btn {
+      display: inline-block;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.01em;
+      color: #fff; background: var(--accent);
+      padding: 13px 34px; border-radius: 100px;
+      box-shadow: 0 8px 20px rgba(140, 108, 255, 0.32);
+    }
+
+    /* ---- Footer ---- */
+    .footer {
+      margin-top: auto; padding-top: 22px;
+      border-top: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-brand { font-size: 11.5px; color: var(--faint); letter-spacing: 0.02em; }
+    .social { display: flex; gap: 18px; }
+    .social a {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+      color: var(--accent); text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
-  <div class="newsletter">
-    <div class="header">
-      <h1>{{companyName}}</h1>
-      <div class="meta">Issue #{{issueNumber}} | {{issueDate}}</div>
+  <div class="page">
+    <div class="masthead">
+      <div class="brand-mark">
+        <div class="brand-dot">{{companyName.[0]}}</div>
+        <div class="company-name">{{companyName}}</div>
+      </div>
+      <div class="issue-meta">
+        <div class="issue-num">Issue #{{issueNumber}}</div>
+        <div class="issue-date">{{issueDate}}</div>
+      </div>
     </div>
 
-    <div class="greeting">
-      <h2>{{greeting}}</h2>
-      <p>{{introText}}</p>
-    </div>
+    <h1 class="greeting">{{greeting}}</h1>
+    <p class="intro">{{introText}}</p>
 
+    <div class="section-label">In this issue</div>
     <div class="articles">
-      <h3>Featured Articles</h3>
       {{#each articles}}
       <div class="article">
-        <h4>{{title}}</h4>
-        <p>{{summary}}</p>
-        <a href="{{readMoreUrl}}">Read More &rarr;</a>
+        <div class="article-title">{{title}}</div>
+        <div class="article-summary">{{summary}}</div>
+        <div class="read-more">Read more &rarr;</div>
       </div>
       {{/each}}
     </div>
 
-    <div class="cta-section">
-      <h3>{{ctaTitle}}</h3>
-      <p>{{ctaText}}</p>
-      <a href="#" class="cta-button">{{ctaButton}}</a>
+    <div class="cta">
+      <div class="cta-title">{{ctaTitle}}</div>
+      <div class="cta-text">{{ctaText}}</div>
+      <a class="cta-btn">{{ctaButton}}</a>
     </div>
 
     <div class="footer">
-      <p>Stay connected with us on social media</p>
-      <div class="social-links">
-        <a href="{{socialLinks.twitter}}" title="Twitter">X</a>
-        <a href="{{socialLinks.linkedin}}" title="LinkedIn">in</a>
-        <a href="{{socialLinks.facebook}}" title="Facebook">f</a>
-      </div>
-      <div class="unsubscribe">
-        <a href="#">Unsubscribe</a> | <a href="#">View in Browser</a>
+      <div class="footer-brand">{{companyName}}</div>
+      <div class="social">
+        <a>Twitter {{socialLinks.twitter}}</a>
+        <a>LinkedIn {{socialLinks.linkedin}}</a>
+        <a>Facebook {{socialLinks.facebook}}</a>
       </div>
     </div>
   </div>

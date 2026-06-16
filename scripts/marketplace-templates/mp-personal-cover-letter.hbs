@@ -1,98 +1,169 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; padding: 50px 60px; line-height: 1.7; }
-    .header { margin-bottom: 40px; }
-    .contact-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
-    .applicant-info h1 { font-size: 28px; color: #1e40af; margin-bottom: 5px; }
-    .applicant-info p { font-size: 13px; color: #666; }
-    .date-info { text-align: right; font-size: 14px; color: #666; }
-    .divider { height: 3px; background: linear-gradient(90deg, #1e40af, #3b82f6); margin-bottom: 30px; }
-    .employer-info { margin-bottom: 30px; }
-    .employer-info p { font-size: 14px; margin-bottom: 3px; }
-    .employer-info .company { font-weight: 600; color: #333; }
-    .subject { margin-bottom: 25px; }
-    .subject p { font-size: 14px; }
-    .subject strong { color: #1e40af; }
-    .salutation { margin-bottom: 20px; font-size: 15px; }
-    .body { margin-bottom: 30px; }
-    .body p { font-size: 15px; margin-bottom: 18px; text-align: justify; }
-    .body ul { margin: 15px 0 15px 25px; }
-    .body li { font-size: 14px; margin-bottom: 8px; }
-    .closing { margin-bottom: 50px; font-size: 15px; }
-    .signature { }
-    .signature-name { font-size: 18px; font-weight: 600; color: #1e40af; margin-bottom: 5px; }
-    .signature-title { font-size: 13px; color: #666; }
-    .highlight { background: #eff6ff; padding: 15px 20px; border-left: 4px solid #1e40af; margin: 20px 0; border-radius: 0 8px 8px 0; }
-    .highlight p { margin: 0; font-size: 14px; font-style: italic; color: #1e40af; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 22mm 20mm;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Letterhead ---- */
+    .letterhead {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding-bottom: 20px; border-bottom: 1px solid var(--ink);
+    }
+    .brand-mark { display: flex; align-items: center; gap: 12px; }
+    .brand-dot {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 600; font-size: 16px;
+      box-shadow: 0 4px 12px rgba(140, 108, 255, 0.28);
+      text-transform: uppercase; flex-shrink: 0;
+    }
+    .applicant-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 26px; font-weight: 600; letter-spacing: -0.015em; line-height: 1;
+    }
+    .applicant-title {
+      margin-top: 5px; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.03em; color: var(--accent);
+    }
+    .contact {
+      text-align: right; font-size: 11px; color: var(--muted); line-height: 1.7;
+    }
+    .contact .em { color: var(--ink); font-weight: 500; }
+
+    /* ---- Date + recipient ---- */
+    .date {
+      margin-top: 26px; font-size: 11.5px; color: var(--faint);
+      font-weight: 600; letter-spacing: 0.04em;
+    }
+    .recipient { margin-top: 20px; font-size: 12.5px; line-height: 1.65; }
+    .recipient .rn { font-weight: 600; }
+    .recipient .rt, .recipient .ra { color: var(--muted); }
+    .recipient .rc { font-weight: 600; color: var(--accent); }
+
+    .subject {
+      margin-top: 24px; padding-bottom: 16px;
+      font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+      border-bottom: 1px solid var(--hair);
+    }
+    .subject .re {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--faint); margin-right: 8px;
+    }
+
+    /* ---- Body ---- */
+    .body { margin-top: 22px; }
+    .body p { font-size: 12.5px; line-height: 1.7; color: var(--ink); margin-bottom: 14px; }
+
+    .highlight {
+      margin: 18px 0; padding: 16px 20px;
+      background: var(--accent-soft); border-left: 3px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 14px; font-weight: 500; line-height: 1.5; color: var(--ink);
+    }
+
+    .achievements { margin: 4px 0 18px; list-style: none; }
+    .achievements li {
+      position: relative; padding-left: 20px; margin-bottom: 8px;
+      font-size: 12.5px; line-height: 1.55; color: var(--ink);
+    }
+    .achievements li::before {
+      content: ''; position: absolute; left: 0; top: 6px;
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    }
+
+    /* ---- Sign off ---- */
+    .signoff { margin-top: 24px; }
+    .signoff .close { font-size: 12.5px; color: var(--ink); }
+    .signoff .sig {
+      margin-top: 10px;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 20px; font-weight: 600; letter-spacing: -0.01em;
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="contact-info">
-      <div class="applicant-info">
-        <h1>{{applicantName}}</h1>
-        <p>{{applicantEmail}} | {{applicantPhone}}</p>
-        <p>{{applicantLocation}}</p>
-        {{#if applicantLinkedIn}}<p>{{applicantLinkedIn}}</p>{{/if}}
+  <div class="page">
+    <div class="letterhead">
+      <div class="brand-mark">
+        <div class="brand-dot">{{applicantName.[0]}}</div>
+        <div>
+          <div class="applicant-name">{{applicantName}}</div>
+          <div class="applicant-title">{{applicantTitle}}</div>
+        </div>
       </div>
-      <div class="date-info">
-        <p>{{date}}</p>
+      <div class="contact">
+        <div class="em">{{applicantEmail}}</div>
+        <div>{{applicantPhone}}</div>
+        <div>{{applicantLocation}}</div>
+        <div>{{applicantLinkedIn}}</div>
       </div>
     </div>
-    <div class="divider"></div>
-  </div>
 
-  <div class="employer-info">
-    <p class="company">{{hiringManagerName}}</p>
-    <p>{{hiringManagerTitle}}</p>
-    <p>{{companyName}}</p>
-    <p>{{companyAddress}}</p>
-  </div>
+    <div class="date">{{date}}</div>
 
-  <div class="subject">
-    <p><strong>Re: Application for {{positionTitle}}</strong></p>
-  </div>
-
-  <div class="salutation">
-    <p>Dear {{hiringManagerName}},</p>
-  </div>
-
-  <div class="body">
-    <p>{{openingParagraph}}</p>
-
-    {{#if highlightText}}
-    <div class="highlight">
-      <p>"{{highlightText}}"</p>
+    <div class="recipient">
+      <div class="rn">{{hiringManagerName}}</div>
+      <div class="rt">{{hiringManagerTitle}}</div>
+      <div class="rc">{{companyName}}</div>
+      <div class="ra">{{companyAddress}}</div>
     </div>
-    {{/if}}
 
-    <p>{{experienceParagraph}}</p>
+    <div class="subject"><span class="re">Re</span>Application for {{positionTitle}}</div>
 
-    {{#if keyAchievements}}
-    <p>Key achievements that demonstrate my qualifications:</p>
-    <ul>
-      {{#each keyAchievements}}
-      <li>{{this}}</li>
-      {{/each}}
-    </ul>
-    {{/if}}
+    <div class="body">
+      <p>{{openingParagraph}}</p>
 
-    <p>{{whyCompanyParagraph}}</p>
+      <div class="highlight">{{highlightText}}</div>
 
-    <p>{{closingParagraph}}</p>
-  </div>
+      <p>{{experienceParagraph}}</p>
 
-  <div class="closing">
-    <p>Sincerely,</p>
-  </div>
+      <ul class="achievements">
+        {{#each keyAchievements}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ul>
 
-  <div class="signature">
-    <div class="signature-name">{{applicantName}}</div>
-    {{#if applicantTitle}}<div class="signature-title">{{applicantTitle}}</div>{{/if}}
+      <p>{{whyCompanyParagraph}}</p>
+
+      <p>{{closingParagraph}}</p>
+    </div>
+
+    <div class="signoff">
+      <div class="close">Sincerely,</div>
+      <div class="sig">{{applicantName}}</div>
+    </div>
   </div>
 </body>
 </html>

@@ -1,72 +1,199 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --ink: #16151A;
+      --muted: #6B6B76;
+      --faint: #9A9AA4;
+      --line: #E6E6EA;
+      --hair: #F1F1F4;
+      --accent: #8C6CFF;
+      --accent-soft: #F3EFFF;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; }
-    .flyer { max-width: 600px; margin: 0 auto; background: linear-gradient(180deg, #f97316 0%, #ea580c 50%, #c2410c 100%); min-height: 800px; position: relative; overflow: hidden; }
-    .decoration { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.1); }
-    .dec1 { top: -100px; right: -100px; }
-    .dec2 { bottom: -150px; left: -150px; width: 400px; height: 400px; }
-    .content { position: relative; z-index: 1; padding: 50px 40px; color: white; text-align: center; }
-    .event-type { font-size: 14px; text-transform: uppercase; letter-spacing: 4px; opacity: 0.9; margin-bottom: 20px; }
-    .title { font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-    .subtitle { font-size: 20px; font-weight: 300; opacity: 0.9; margin-bottom: 40px; }
-    .date-box { display: inline-block; background: white; color: #ea580c; padding: 20px 40px; border-radius: 12px; margin-bottom: 30px; }
-    .date-box .date { font-size: 28px; font-weight: 700; }
-    .date-box .time { font-size: 16px; opacity: 0.8; margin-top: 5px; }
-    .venue { margin-bottom: 40px; }
-    .venue h3 { font-size: 16px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; margin-bottom: 10px; }
-    .venue p { font-size: 20px; font-weight: 500; }
-    .venue .address { font-size: 14px; opacity: 0.8; margin-top: 5px; }
-    .highlights { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 30px; margin-bottom: 40px; }
-    .highlights h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
-    .highlights-list { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    .highlights-list li { font-size: 16px; display: flex; align-items: center; gap: 10px; }
-    .highlights-list li::before { content: '★'; color: #fbbf24; }
-    .ticket-info { margin-bottom: 30px; }
-    .ticket-price { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
-    .cta-button { display: inline-block; background: white; color: #ea580c; padding: 16px 50px; font-size: 18px; font-weight: 700; border-radius: 50px; text-decoration: none; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-    .website { margin-top: 30px; font-size: 18px; opacity: 0.9; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Hero band (accent) ---- */
+    .hero {
+      background: var(--accent);
+      color: #fff;
+      padding: 30mm 20mm 26mm;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-ring {
+      position: absolute; border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .hero-ring.a { width: 300px; height: 300px; top: -120px; right: -90px; }
+    .hero-ring.b { width: 180px; height: 180px; top: -60px; right: -30px; }
+    .hero-ring.c {
+      width: 90px; height: 90px; bottom: -36px; left: 40mm;
+      background: rgba(255, 255, 255, 0.08); border: none;
+    }
+    .hero-kicker {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.22em;
+      text-transform: uppercase; color: rgba(255, 255, 255, 0.82);
+      margin-bottom: 18px; position: relative;
+    }
+    .event-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 66px; font-weight: 600; line-height: 0.98;
+      letter-spacing: -0.02em; position: relative;
+    }
+    .event-subtitle {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 21px; font-weight: 400; font-style: italic;
+      color: rgba(255, 255, 255, 0.9); margin-top: 16px;
+      position: relative; max-width: 80%;
+    }
+
+    /* ---- Body ---- */
+    .body {
+      padding: 30px 20mm 22mm;
+      display: flex; flex-direction: column; flex: 1;
+    }
+
+    /* ---- Date / time block ---- */
+    .datetime {
+      display: flex; align-items: stretch; gap: 0;
+      border: 1px solid var(--line); border-radius: 14px;
+      overflow: hidden; margin-bottom: 26px;
+    }
+    .dt-cell { flex: 1; padding: 20px 24px; }
+    .dt-cell + .dt-cell { border-left: 1px solid var(--line); }
+    .dt-label {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 8px;
+    }
+    .dt-value {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1;
+    }
+
+    /* ---- Venue ---- */
+    .venue-block { margin-bottom: 26px; }
+    .section-label {
+      font-size: 9.5px; font-weight: 600; letter-spacing: 0.13em;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 10px;
+    }
+    .venue-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 20px; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .venue-addr { font-size: 13px; color: var(--muted); margin-top: 5px; line-height: 1.6; }
+
+    /* ---- Highlights ---- */
+    .highlights { margin-bottom: 28px; }
+    .highlights ul { list-style: none; }
+    .highlights li {
+      font-size: 13.5px; color: var(--ink); line-height: 1.5;
+      padding: 9px 0 9px 22px; position: relative;
+      border-bottom: 1px solid var(--hair);
+    }
+    .highlights li::before {
+      content: ''; position: absolute; left: 0; top: 15px;
+      width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 2px 6px rgba(140, 108, 255, 0.32);
+    }
+
+    /* ---- Footer / price + CTA ---- */
+    .footer { margin-top: auto; }
+    .price-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 24px; background: var(--accent-soft);
+      border-radius: 14px; margin-bottom: 20px;
+    }
+    .price-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+    }
+    .price-value {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 30px; font-weight: 600; letter-spacing: -0.01em; line-height: 1;
+    }
+    .cta-btn {
+      font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
+      color: #fff; background: var(--accent);
+      padding: 16px 38px; border-radius: 100px;
+      box-shadow: 0 8px 22px rgba(140, 108, 255, 0.34);
+      white-space: nowrap;
+    }
+    .website {
+      text-align: center; font-size: 12px; color: var(--faint);
+      letter-spacing: 0.06em;
+    }
   </style>
 </head>
 <body>
-  <div class="flyer">
-    <div class="decoration dec1"></div>
-    <div class="decoration dec2"></div>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-ring a"></div>
+      <div class="hero-ring b"></div>
+      <div class="hero-ring c"></div>
+      <div class="hero-kicker">You're invited</div>
+      <h1 class="event-title">{{eventTitle}}</h1>
+      <div class="event-subtitle">{{eventSubtitle}}</div>
+    </div>
 
-    <div class="content">
-      <div class="event-type">Don't Miss Out!</div>
-      <h1 class="title">{{eventTitle}}</h1>
-      <div class="subtitle">{{eventSubtitle}}</div>
-
-      <div class="date-box">
-        <div class="date">{{date}}</div>
-        <div class="time">{{time}}</div>
+    <div class="body">
+      <div class="datetime">
+        <div class="dt-cell">
+          <div class="dt-label">Date</div>
+          <div class="dt-value">{{date}}</div>
+        </div>
+        <div class="dt-cell">
+          <div class="dt-label">Time</div>
+          <div class="dt-value">{{time}}</div>
+        </div>
       </div>
 
-      <div class="venue">
-        <h3>Location</h3>
-        <p>{{venue}}</p>
-        <p class="address">{{address}}</p>
+      <div class="venue-block">
+        <div class="section-label">Venue</div>
+        <div class="venue-name">{{venue}}</div>
+        <div class="venue-addr">{{address}}</div>
       </div>
 
       <div class="highlights">
-        <h3>What to Expect</h3>
-        <ul class="highlights-list">
+        <div class="section-label">Highlights</div>
+        <ul>
           {{#each highlights}}
           <li>{{this}}</li>
           {{/each}}
         </ul>
       </div>
 
-      <div class="ticket-info">
-        <div class="ticket-price">{{ticketPrice}}</div>
-        <a href="#" class="cta-button">{{ctaText}}</a>
+      <div class="footer">
+        <div class="price-row">
+          <div>
+            <div class="price-label">Admission</div>
+            <div class="price-value">{{ticketPrice}}</div>
+          </div>
+          <div class="cta-btn">{{ctaText}}</div>
+        </div>
+        <div class="website">{{website}}</div>
       </div>
-
-      <div class="website">{{website}}</div>
     </div>
   </div>
 </body>
