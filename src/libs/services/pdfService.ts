@@ -5,16 +5,23 @@ import Handlebars, { TemplateDelegate } from 'handlebars';
 import { v4 as uuidv4 } from 'uuid';
 import { Readable } from 'stream';
 import { SESService } from './sesService';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { Theme } from '../theme/themeTypes';
+import { buildThemeHead } from '../theme/buildThemeStyle';
+import { injectIntoHead } from '../theme/injectTheme';
+import { buildSystemParams, SystemParams } from '../systemParams';
 
 const s3Client = new S3Client({});
 const sesService = new SESService();
+const ddbDocClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const MAX_CACHED_TEMPLATES = 100;
 
 // Browser instance reuse - survives across warm Lambda invocations
 let browserInstance: Browser | null = null;
 
 // Template compilation cache - avoids re-compiling same templates
 const templateCache = new Map<string, { compiled: TemplateDelegate; timestamp: number }>();
-const TEMPLATE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL to handle template updates
 
 interface GeneratePdfOptions {
   userId: string;
@@ -29,49 +36,73 @@ interface PdfResult {
   sizeBytes: number;
 }
 
+interface ResolvedTheme {
+  brand: string;
+  accent: string;
+  fontKey: string;
+  logoDataUri: string | null;
+}
+
+// Register Handlebars helpers at module load so they are available even when
+// PdfService is used statically (e.g. composeHtml in tests or other callers).
+function registerHandlebarsHelpers(): void {
+  Handlebars.registerHelper('ifEq', function (this: any, a: any, b: any, options: any) {
+    if (a == b) return options.fn(this);
+    else return options.inverse(this);
+  });
+
+  Handlebars.registerHelper('gt', function (a, b) {
+    return (a > b);
+  });
+
+  Handlebars.registerHelper('formatDate', function (date: any) {
+    // Simple date formatter
+    const d = new Date(date);
+    return d.toLocaleDateString();
+  });
+
+  Handlebars.registerHelper('formatCurrency', function (amount: number) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  });
+
+  Handlebars.registerHelper('mkpdfsLogo', function (this: any, name: any, options: any) {
+    const theme = options?.data?.mkpdfsTheme as ResolvedTheme | undefined;
+    if (theme && theme.logoDataUri) {
+      return new Handlebars.SafeString(
+        `<img class="brand-logo" src="${theme.logoDataUri}" alt="">`,
+      );
+    }
+    const initial = (typeof name === 'string' && name.trim() ? name.trim()[0] : '') || '';
+    return new Handlebars.SafeString(
+      `<div class="brand-dot">${Handlebars.escapeExpression(initial)}</div>`,
+    );
+  });
+}
+
+registerHandlebarsHelpers();
+
 export class PdfService {
   constructor() {
-    this.registerHandlebarsHelpers();
-  }
-
-  private registerHandlebarsHelpers(): void {
-    Handlebars.registerHelper('ifEq', function (this: any, a: any, b: any, options: any) {
-      if (a == b) return options.fn(this);
-      else return options.inverse(this);
-    });
-
-    Handlebars.registerHelper('gt', function (a, b) {
-      return (a > b);
-    });
-
-    Handlebars.registerHelper('formatDate', function (date: any) {
-      // Simple date formatter
-      const d = new Date(date);
-      return d.toLocaleDateString();
-    });
-
-    Handlebars.registerHelper('formatCurrency', function (amount: number) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(amount);
-    });
+    // Helpers are registered at module load; constructor is a no-op here
+    // but kept for backwards compatibility.
   }
 
   async generatePdf(options: GeneratePdfOptions): Promise<PdfResult> {
     const { userId, templateId, data, sendEmail } = options;
 
-    // Get compiled template (with caching)
-    const compiledTemplate = await this.getCompiledTemplate(userId, templateId);
-    let html: string;
+    // Read the template row (theme + content version) — falls through to
+    // S3-only behaviour if the row is missing (legacy/direct uploads).
+    const row = await this.getTemplateRow(userId, templateId);
+    const contentVersion = row?.contentVersion || row?.updatedAt || 'v0';
 
-    // Handle array data for batch processing
-    if (Array.isArray(data)) {
-      const htmlPages = data.map(item => compiledTemplate(item));
-      html = htmlPages.join('<div style="page-break-after: always;"></div>');
-    } else {
-      html = compiledTemplate(data);
-    }
+    const compiledTemplate = await this.getCompiledTemplate(userId, templateId, contentVersion);
+    const resolvedTheme = await this.resolveTheme(row?.theme as Theme | undefined);
+    const systemParams = buildSystemParams(new Date());
+
+    const html = PdfService.composeHtml(compiledTemplate, data, resolvedTheme, systemParams);
 
     // Generate PDF
     const pdfBuffer = await this.generatePdfFromHtml(html);
@@ -115,6 +146,33 @@ export class PdfService {
     };
   }
 
+  /**
+   * Render the compiled template with system params + theme, then inject the
+   * theme <head> fragment. Pure string work — no browser, no I/O.
+   */
+  static composeHtml(
+    compiled: TemplateDelegate,
+    data: any,
+    resolvedTheme: ResolvedTheme | undefined,
+    systemParams: SystemParams,
+  ): string {
+    const runtime = resolvedTheme ? { data: { mkpdfsTheme: resolvedTheme } } : undefined;
+    const renderOne = (item: any) =>
+      compiled(typeof item === 'object' && item !== null ? { ...item, ...systemParams } : item, runtime);
+
+    let html: string;
+    if (Array.isArray(data)) {
+      html = data.map(renderOne).join('<div style="page-break-after: always;"></div>');
+    } else {
+      html = renderOne(data);
+    }
+
+    if (resolvedTheme) {
+      html = injectIntoHead(html, buildThemeHead(resolvedTheme));
+    }
+    return html;
+  }
+
   private async generatePdfFromHtml(html: string): Promise<Buffer> {
     const browser = await this.getBrowser();
 
@@ -122,6 +180,8 @@ export class PdfService {
     try {
       await page.setContent(html, { waitUntil: 'networkidle0' });
       await page.emulateMediaType('screen');
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      await page.evaluate(() => (globalThis as any).document?.fonts?.ready).catch(() => undefined);
 
       const pdfBuffer = await page.pdf({
         format: 'A4',
@@ -196,42 +256,72 @@ export class PdfService {
     });
   }
 
+  private async getTemplateRow(userId: string, templateId: string): Promise<any | undefined> {
+    try {
+      const res = await ddbDocClient.send(new GetCommand({
+        TableName: process.env.TEMPLATES_TABLE!,
+        Key: { userId, templateId },
+      }));
+      return res.Item;
+    } catch (err) {
+      console.error('[pdfService] failed to read template row:', err);
+      return undefined; // render with defaults rather than fail the PDF
+    }
+  }
+
+  /** Resolve a stored Theme into render-ready values (logo → data URI). */
+  private async resolveTheme(theme?: Theme): Promise<ResolvedTheme | undefined> {
+    if (!theme) return undefined;
+    let logoDataUri: string | null = null;
+    if (theme.logoKey) {
+      try {
+        const obj = await s3Client.send(new GetObjectCommand({
+          Bucket: process.env.ASSETS_BUCKET!,
+          Key: theme.logoKey,
+        }));
+        const bytes = await obj.Body!.transformToByteArray();
+        const contentType = obj.ContentType || 'image/png';
+        logoDataUri = `data:${contentType};base64,${Buffer.from(bytes).toString('base64')}`;
+      } catch (err) {
+        console.error('[pdfService] failed to load logo, falling back to mark:', err);
+      }
+    }
+    return { brand: theme.brand, accent: theme.accent, fontKey: theme.fontKey, logoDataUri };
+  }
+
   /**
    * Get a compiled Handlebars template with caching.
-   * Templates are cached with a TTL to handle updates while avoiding recompilation.
+   * Templates are cached by content version to avoid recompilation on updates.
    */
-  private async getCompiledTemplate(userId: string, templateId: string): Promise<TemplateDelegate> {
-    const cacheKey = `${userId}:${templateId}`;
-    const now = Date.now();
-
-    // Check cache and TTL
+  private async getCompiledTemplate(
+    userId: string,
+    templateId: string,
+    contentVersion: string,
+  ): Promise<TemplateDelegate> {
+    const cacheKey = `${userId}:${templateId}:${contentVersion}`;
     const cached = templateCache.get(cacheKey);
-    if (cached && (now - cached.timestamp) < TEMPLATE_CACHE_TTL) {
-      return cached.compiled;
-    }
+    if (cached) return cached.compiled;
 
-    // Fetch template from S3
     const templateKey = `${userId}/templates/${templateId}.hbs`;
-    const templateCommand = new GetObjectCommand({
-      Bucket: process.env.ASSETS_BUCKET!,
-      Key: templateKey
-    });
-
     let templateContent: string;
     try {
-      const templateResponse = await s3Client.send(templateCommand);
+      const templateResponse = await s3Client.send(new GetObjectCommand({
+        Bucket: process.env.ASSETS_BUCKET!,
+        Key: templateKey,
+      }));
       templateContent = await this.streamToString(templateResponse.Body as Readable);
     } catch (error: any) {
-      if (error.name === 'NoSuchKey') {
-        throw new Error(`Template not found: ${templateId}`);
-      }
+      if (error.name === 'NoSuchKey') throw new Error(`Template not found: ${templateId}`);
       throw error;
     }
 
-    // Compile and cache
     const compiled = Handlebars.compile(templateContent);
-    templateCache.set(cacheKey, { compiled, timestamp: now });
-
+    templateCache.set(cacheKey, { compiled, timestamp: Date.now() });
+    // Bound the cache (LRU-ish: Map preserves insertion order)
+    if (templateCache.size > MAX_CACHED_TEMPLATES) {
+      const oldest = templateCache.keys().next().value;
+      if (oldest) templateCache.delete(oldest);
+    }
     return compiled;
   }
 
