@@ -11,15 +11,20 @@
       --faint: #9A9AA4;
       --line: #E6E6EA;
       --hair: #F1F1F4;
+      --brand: #8C6CFF;
+      --brand-soft: #F3EFFF;
+      --brand-shadow: rgba(140, 108, 255, 0.28);
       --accent: #8C6CFF;
       --accent-soft: #F3EFFF;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 210mm;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-family: var(--font-body);
       color: var(--ink);
       -webkit-font-smoothing: antialiased;
       font-feature-settings: 'tnum' 1, 'cv05' 1;
@@ -61,7 +66,7 @@
 
     /* ---- Title ---- */
     .title {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 30px; font-weight: 500; letter-spacing: 0.01em;
       line-height: 1.1; margin-top: 14px;
     }
@@ -69,14 +74,14 @@
 
     /* ---- Recipient ---- */
     .recipient {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 58px; font-weight: 600; letter-spacing: -0.01em;
       line-height: 1.05; margin: 8px 0;
     }
 
     /* ---- Event ---- */
     .event {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 26px; font-weight: 500; line-height: 1.2; max-width: 130mm;
       color: var(--accent);
     }
@@ -105,7 +110,7 @@
 
     /* ---- Signature ---- */
     .sig-line { width: 220px; height: 1px; background: var(--ink); margin: 0 auto 9px; }
-    .sig-name { font-family: 'Fraunces', Georgia, serif; font-size: 17px; font-weight: 500; }
+    .sig-name { font-family: var(--font-heading); font-size: 17px; font-weight: 500; }
     .sig-title {
       font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em;
       text-transform: uppercase; color: var(--faint); margin-top: 4px;

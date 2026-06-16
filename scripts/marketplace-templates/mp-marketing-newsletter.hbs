@@ -11,15 +11,20 @@
       --faint: #9A9AA4;
       --line: #E6E6EA;
       --hair: #F1F1F4;
+      --brand: #8C6CFF;
+      --brand-soft: #F3EFFF;
+      --brand-shadow: rgba(140, 108, 255, 0.28);
       --accent: #8C6CFF;
       --accent-soft: #F3EFFF;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 210mm;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-family: var(--font-body);
       color: var(--ink);
       -webkit-font-smoothing: antialiased;
       font-feature-settings: 'tnum' 1, 'cv05' 1;
@@ -42,14 +47,15 @@
     .brand-mark { display: flex; align-items: center; gap: 11px; }
     .brand-dot {
       width: 30px; height: 30px; border-radius: 8px;
-      background: var(--accent);
+      background: var(--brand);
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-weight: 600; font-size: 15px;
-      box-shadow: 0 4px 12px rgba(140, 108, 255, 0.28);
+      box-shadow: 0 4px 12px var(--brand-shadow);
       text-transform: uppercase;
     }
+    .brand-logo { height: 30px; width: auto; max-width: 160px; object-fit: contain; display: block; }
     .company-name {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 22px; font-weight: 600; letter-spacing: -0.01em;
     }
     .issue-meta { text-align: right; }
@@ -61,7 +67,7 @@
 
     /* ---- Greeting ---- */
     .greeting {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 38px; font-weight: 600; letter-spacing: -0.02em;
       line-height: 1.05; margin: 30px 0 14px;
     }
@@ -81,7 +87,7 @@
     }
     .article:first-child { border-top: none; padding-top: 0; }
     .article-title {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
       line-height: 1.15; margin-bottom: 7px;
     }
@@ -100,7 +106,7 @@
       padding: 24px 26px; text-align: center;
     }
     .cta-title {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 7px;
     }
     .cta-text {
@@ -133,7 +139,7 @@
   <div class="page">
     <div class="masthead">
       <div class="brand-mark">
-        <div class="brand-dot">{{companyName.[0]}}</div>
+        {{mkpdfsLogo companyName}}
         <div class="company-name">{{companyName}}</div>
       </div>
       <div class="issue-meta">

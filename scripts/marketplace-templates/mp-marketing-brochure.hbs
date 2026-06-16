@@ -11,15 +11,20 @@
       --faint: #9A9AA4;
       --line: #E6E6EA;
       --hair: #F1F1F4;
+      --brand: #8C6CFF;
+      --brand-soft: #F3EFFF;
+      --brand-shadow: rgba(140, 108, 255, 0.28);
       --accent: #8C6CFF;
       --accent-soft: #F3EFFF;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 210mm;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-family: var(--font-body);
       color: var(--ink);
       -webkit-font-smoothing: antialiased;
       font-feature-settings: 'tnum' 1, 'cv05' 1;
@@ -40,12 +45,12 @@
       text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
     }
     .hero-title {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 52px; font-weight: 600; line-height: 1.02;
       letter-spacing: -0.02em; max-width: 92%;
     }
     .hero-tagline {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 18px; font-weight: 400; font-style: italic;
       color: var(--accent); margin-top: 14px; letter-spacing: -0.01em;
     }
@@ -99,7 +104,7 @@
     }
     .plan.featured .plan-name { color: var(--accent); }
     .plan-price {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 30px; font-weight: 600; letter-spacing: -0.01em;
       font-variant-numeric: tabular-nums; line-height: 1;
     }

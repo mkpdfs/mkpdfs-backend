@@ -11,15 +11,20 @@
       --faint: #9A9AA4;
       --line: #E6E6EA;
       --hair: #F1F1F4;
+      --brand: #8C6CFF;
+      --brand-soft: #F3EFFF;
+      --brand-shadow: rgba(140, 108, 255, 0.28);
       --accent: #8C6CFF;
       --accent-soft: #F3EFFF;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 210mm;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-family: var(--font-body);
       color: var(--ink);
       -webkit-font-smoothing: antialiased;
       font-feature-settings: 'tnum' 1, 'cv05' 1;
@@ -52,21 +57,22 @@
     .brand-dot {
       width: 30px; height: 30px;
       border-radius: 8px;
-      background: var(--accent);
+      background: var(--brand);
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-weight: 600; font-size: 15px;
-      box-shadow: 0 4px 12px rgba(140, 108, 255, 0.28);
+      box-shadow: 0 4px 12px var(--brand-shadow);
       text-transform: uppercase;
     }
+    .brand-logo { height: 30px; width: auto; max-width: 160px; object-fit: contain; display: block; }
     .business-name {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 21px; font-weight: 600; letter-spacing: -0.01em;
     }
     .business-address {
       font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 2px;
     }
     .kicker {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 30px; font-weight: 500; letter-spacing: 0.02em;
       margin-top: 16px;
     }
@@ -111,7 +117,7 @@
       text-transform: uppercase; color: var(--accent);
     }
     .totals-grand .val {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 24px; font-weight: 600; color: var(--ink);
       font-variant-numeric: tabular-nums;
     }
@@ -128,7 +134,7 @@
     .pay-method { font-size: 12px; font-weight: 600; }
     .thanks {
       margin-top: 14px; text-align: center;
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 14.5px; font-weight: 400; font-style: italic;
       color: var(--muted); line-height: 1.5;
     }
@@ -139,7 +145,7 @@
     <div class="receipt">
       <div class="masthead">
         <div class="brand-mark">
-          <div class="brand-dot">{{businessName.[0]}}</div>
+          {{mkpdfsLogo businessName}}
           <div class="business-name">{{businessName}}</div>
         </div>
         <div class="business-address">{{businessAddress}}</div>

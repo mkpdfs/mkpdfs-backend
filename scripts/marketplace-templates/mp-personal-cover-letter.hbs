@@ -11,15 +11,20 @@
       --faint: #9A9AA4;
       --line: #E6E6EA;
       --hair: #F1F1F4;
+      --brand: #8C6CFF;
+      --brand-soft: #F3EFFF;
+      --brand-shadow: rgba(140, 108, 255, 0.28);
       --accent: #8C6CFF;
       --accent-soft: #F3EFFF;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 210mm;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-family: var(--font-body);
       color: var(--ink);
       -webkit-font-smoothing: antialiased;
       font-feature-settings: 'tnum' 1, 'cv05' 1;
@@ -42,14 +47,15 @@
     .brand-mark { display: flex; align-items: center; gap: 12px; }
     .brand-dot {
       width: 34px; height: 34px; border-radius: 9px;
-      background: var(--accent);
+      background: var(--brand);
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-weight: 600; font-size: 16px;
-      box-shadow: 0 4px 12px rgba(140, 108, 255, 0.28);
+      box-shadow: 0 4px 12px var(--brand-shadow);
       text-transform: uppercase; flex-shrink: 0;
     }
+    .brand-logo { height: 34px; width: auto; max-width: 160px; object-fit: contain; display: block; }
     .applicant-name {
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 26px; font-weight: 600; letter-spacing: -0.015em; line-height: 1;
     }
     .applicant-title {
@@ -89,7 +95,7 @@
       margin: 18px 0; padding: 16px 20px;
       background: var(--accent-soft); border-left: 3px solid var(--accent);
       border-radius: 0 10px 10px 0;
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 14px; font-weight: 500; line-height: 1.5; color: var(--ink);
     }
 
@@ -108,7 +114,7 @@
     .signoff .close { font-size: 12.5px; color: var(--ink); }
     .signoff .sig {
       margin-top: 10px;
-      font-family: 'Fraunces', Georgia, serif;
+      font-family: var(--font-heading);
       font-size: 20px; font-weight: 600; letter-spacing: -0.01em;
     }
   </style>
@@ -117,7 +123,7 @@
   <div class="page">
     <div class="letterhead">
       <div class="brand-mark">
-        <div class="brand-dot">{{applicantName.[0]}}</div>
+        {{mkpdfsLogo applicantName}}
         <div>
           <div class="applicant-name">{{applicantName}}</div>
           <div class="applicant-title">{{applicantTitle}}</div>
