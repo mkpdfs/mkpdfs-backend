@@ -329,8 +329,10 @@ export class PdfService {
    * Invalidate a cached template (call after template updates).
    */
   static invalidateTemplateCache(userId: string, templateId: string): void {
-    const cacheKey = `${userId}:${templateId}`;
-    templateCache.delete(cacheKey);
+    const prefix = `${userId}:${templateId}:`;
+    for (const key of templateCache.keys()) {
+      if (key.startsWith(prefix)) templateCache.delete(key);
+    }
   }
 
   /**
