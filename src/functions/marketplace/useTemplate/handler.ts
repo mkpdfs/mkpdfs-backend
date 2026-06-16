@@ -24,17 +24,6 @@ const useTemplate: ValidatedEventAPIGatewayProxyEvent<null> = async (event: any)
     }
 
     const input = typeof event.body === 'string' ? JSON.parse(event.body || '{}') : (event.body || {});
-    let theme;
-    if (input.theme) {
-      try {
-        theme = await resolveThemeInput(userId, input.theme as ThemeInput);
-      } catch (err: any) {
-        if (err?.name === 'ThemeValidationError' || err?.name === 'LogoIngestError') {
-          return formatJSONResponse({ message: err.message }, 400);
-        }
-        throw err;
-      }
-    }
 
     // Get marketplace template
     const mpResult = await docClient.send(new GetCommand({
@@ -65,6 +54,19 @@ const useTemplate: ValidatedEventAPIGatewayProxyEvent<null> = async (event: any)
           currentCount,
           limit: subscriptionLimits.templatesAllowed
         }, 429);
+      }
+    }
+
+    // Resolve theme only after existence + limit checks pass
+    let theme;
+    if (input.theme) {
+      try {
+        theme = await resolveThemeInput(userId, input.theme as ThemeInput);
+      } catch (err: any) {
+        if (err?.name === 'ThemeValidationError' || err?.name === 'LogoIngestError') {
+          return formatJSONResponse({ message: err.message }, 400);
+        }
+        throw err;
       }
     }
 
