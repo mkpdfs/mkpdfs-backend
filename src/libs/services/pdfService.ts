@@ -21,7 +21,7 @@ const MAX_CACHED_TEMPLATES = 100;
 let browserInstance: Browser | null = null;
 
 // Template compilation cache - avoids re-compiling same templates
-const templateCache = new Map<string, { compiled: TemplateDelegate; timestamp: number }>();
+const templateCache = new Map<string, TemplateDelegate>();
 
 interface GeneratePdfOptions {
   userId: string;
@@ -98,8 +98,10 @@ export class PdfService {
     const row = await this.getTemplateRow(userId, templateId);
     const contentVersion = row?.contentVersion || row?.updatedAt || 'v0';
 
-    const compiledTemplate = await this.getCompiledTemplate(userId, templateId, contentVersion);
-    const resolvedTheme = await this.resolveTheme(row?.theme as Theme | undefined);
+    const [compiledTemplate, resolvedTheme] = await Promise.all([
+      this.getCompiledTemplate(userId, templateId, contentVersion),
+      this.resolveTheme(row?.theme as Theme | undefined),
+    ]);
     const systemParams = buildSystemParams(new Date());
 
     const html = PdfService.composeHtml(compiledTemplate, data, resolvedTheme, systemParams);
@@ -300,7 +302,7 @@ export class PdfService {
   ): Promise<TemplateDelegate> {
     const cacheKey = `${userId}:${templateId}:${contentVersion}`;
     const cached = templateCache.get(cacheKey);
-    if (cached) return cached.compiled;
+    if (cached) return cached;
 
     const templateKey = `${userId}/templates/${templateId}.hbs`;
     let templateContent: string;
@@ -316,7 +318,7 @@ export class PdfService {
     }
 
     const compiled = Handlebars.compile(templateContent);
-    templateCache.set(cacheKey, { compiled, timestamp: Date.now() });
+    templateCache.set(cacheKey, compiled);
     // Bound the cache (LRU-ish: Map preserves insertion order)
     if (templateCache.size > MAX_CACHED_TEMPLATES) {
       const oldest = templateCache.keys().next().value;
