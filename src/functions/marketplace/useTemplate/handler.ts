@@ -6,6 +6,8 @@ import { S3Client, CopyObjectCommand } from '@aws-sdk/client-s3';
 import { iamOnlyMiddleware } from '@libs/middleware/dualAuth';
 import { subscriptionMiddleware } from '@libs/middleware/subscription';
 import { v4 as uuidv4 } from 'uuid';
+import { resolveThemeInput } from '@libs/theme/resolveLogoInput';
+import { ThemeInput } from '@libs/theme/themeTypes';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -19,6 +21,19 @@ const useTemplate: ValidatedEventAPIGatewayProxyEvent<null> = async (event: any)
 
     if (!templateId) {
       return formatJSONResponse({ message: 'Template ID is required' }, 400);
+    }
+
+    const input = typeof event.body === 'string' ? JSON.parse(event.body || '{}') : (event.body || {});
+    let theme;
+    if (input.theme) {
+      try {
+        theme = await resolveThemeInput(userId, input.theme as ThemeInput);
+      } catch (err: any) {
+        if (err?.name === 'ThemeValidationError' || err?.name === 'LogoIngestError') {
+          return formatJSONResponse({ message: err.message }, 400);
+        }
+        throw err;
+      }
     }
 
     // Get marketplace template
@@ -59,7 +74,7 @@ const useTemplate: ValidatedEventAPIGatewayProxyEvent<null> = async (event: any)
     const now = new Date().toISOString();
 
     // Copy template from marketplace to user's folder
-    await s3Client.send(new CopyObjectCommand({
+    const copyResult = await s3Client.send(new CopyObjectCommand({
       Bucket: process.env.ASSETS_BUCKET!,
       CopySource: `${process.env.ASSETS_BUCKET}/${mpTemplate.s3Key}`,
       Key: newS3Key,
@@ -82,6 +97,8 @@ const useTemplate: ValidatedEventAPIGatewayProxyEvent<null> = async (event: any)
       description: mpTemplate.description || '',
       s3Key: newS3Key,
       sourceMarketplaceId: templateId,
+      contentVersion: copyResult.VersionId || now,
+      ...(theme ? { theme } : {}),
       createdAt: now,
       updatedAt: now
     };

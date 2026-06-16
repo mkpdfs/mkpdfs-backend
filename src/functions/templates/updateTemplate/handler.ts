@@ -114,7 +114,7 @@ const updateTemplate: ValidatedEventAPIGatewayProxyEvent<UpdateTemplateBody> = a
     const newName = name || existingTemplate.name;
 
     // Overwrite content in S3 at the SAME key
-    await s3Client.send(new PutObjectCommand({
+    const putResult = await s3Client.send(new PutObjectCommand({
       Bucket: process.env.ASSETS_BUCKET!,
       Key: s3Key,
       Body: templateContent,
@@ -133,6 +133,7 @@ const updateTemplate: ValidatedEventAPIGatewayProxyEvent<UpdateTemplateBody> = a
       description: description !== undefined ? description : (existingTemplate.description || ''),
       s3Key,
       fileSize: Buffer.byteLength(templateContent, 'utf-8'),
+      contentVersion: putResult.VersionId || now,
       updatedAt: now
     };
 

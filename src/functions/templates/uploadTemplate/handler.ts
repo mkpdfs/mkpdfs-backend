@@ -133,7 +133,7 @@ const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = a
     const now = new Date().toISOString();
 
     // Upload to S3
-    await s3Client.send(new PutObjectCommand({
+    const putResult = await s3Client.send(new PutObjectCommand({
       Bucket: process.env.ASSETS_BUCKET!,
       Key: s3Key,
       Body: templateContent,
@@ -154,6 +154,7 @@ const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = a
       description: description || '',
       s3Key,
       fileSize: Buffer.byteLength(templateContent, 'utf-8'),
+      contentVersion: putResult.VersionId || now,
       createdAt: now,
       updatedAt: now
     };
