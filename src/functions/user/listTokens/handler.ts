@@ -19,7 +19,7 @@ const listTokens: ValidatedEventAPIGatewayProxyEvent<null> = async (event) => {
       ExpressionAttributeValues: {
         ':userId': userId
       },
-      ProjectionExpression: 'tokenId, #n, createdAt, lastUsed, usageCount',
+      ProjectionExpression: 'tokenId, #n, keyHint, createdAt, lastUsed, usageCount',
       ExpressionAttributeNames: {
         '#n': 'name'
       }

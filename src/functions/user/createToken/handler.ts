@@ -47,6 +47,9 @@ const createUserToken: ValidatedEventAPIGatewayProxyEvent<CreateTokenRequest> = 
     const rawToken = `tlfy_${randomBytes(32).toString('hex')}`;
     const hashedToken = createHash('sha256').update(rawToken).digest('hex');
     const tokenId = randomBytes(8).toString('hex'); // Short ID for user-facing operations
+    // Non-sensitive recognizable hint (prefix + last 4) so users can tell keys apart
+    // in the dashboard. The secret itself is never stored (only its hash).
+    const keyHint = `${rawToken.slice(0, 11)}…${rawToken.slice(-4)}`;
 
     // Calculate expiration
     const expiresAt = expiresInDays
@@ -57,6 +60,7 @@ const createUserToken: ValidatedEventAPIGatewayProxyEvent<CreateTokenRequest> = 
     const tokenData = {
       token: hashedToken,
       tokenId,
+      keyHint,
       userId,
       name,
       active: true,
