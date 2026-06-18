@@ -100,6 +100,29 @@ CI: push `dev` → CDK deploy dev; push `main` → CDK deploy prod (`.github/wor
 - S3 upload with 5-day pre-signed URLs
 - Optional email delivery via SES
 
+#### PDF Generation Performance (optimized 2026-06-18)
+
+Render speed work applied (dev + prod). Render engine stays headless Chromium — a free-engine swap to WeasyPrint was evaluated and rejected (no `box-shadow`, partial grid/flex, and it breaks the "render arbitrary user/AI HTML/CSS" promise).
+
+What's done:
+- **Browser reuse**: `browserInstance` is a module-scope singleton reused across warm invocations (pages are closed, not the browser). `browserLaunch` promise coalesces concurrent launches so one invocation never spawns two Chromium processes.
+- **Render wait**: `page.setContent(html, { waitUntil: 'load' })` (NOT `networkidle0` — that added a 500ms idle-quiet tail) followed by a bounded font wait `PdfService.waitForFonts` (`Promise.race(document.fonts.ready, FONT_WAIT_MS=2000)`) so a slow/unreachable font CDN can't stall the render.
+- **Self-hosted fonts** (no network fetch at render time): `scripts/fetch-fonts.mjs` downloads the 8 theme font pairs' woff2 (latin + latin-ext subsets only) from Google and generates `src/libs/theme/generated/fontFaces.ts` (~4.4MB of base64 `@font-face` data: URIs). **Re-run `node scripts/fetch-fonts.mjs` whenever `fonts.ts` changes**, then re-seed the marketplace.
+  - `buildThemeStyle.ts` injects a local `<style id="mkpdfs-fonts">@font-face…</style>` (only the selected pair) instead of the old Google `<link>`.
+  - Marketplace templates (no theme row, so `buildThemeHead` doesn't run for them) use the `{{{mkpdfsFontFaces}}}` Handlebars helper — registered in BOTH `pdfService.ts` AND `scripts/generate-thumbnails.ts` (keep in sync). Their hardcoded remote `@import` was removed. **Changing a marketplace `.hbs` requires `seed-marketplace.ts <env>` to push it to S3.**
+- **Logo cache**: `logoCache` (module-scope, keyed by `logoKey` which is UUID-per-upload, bounded) skips the S3 GET + base64 on every branded render.
+- **`--font-render-hinting=none`** appended to the Chromium launch args.
+- **Lambda memory 4096 MB** for `GeneratePdfFn` / `GeneratePdfApiKeyFn` / `ProcessJobFn` (Chromium render is CPU-bound; CPU scales with memory).
+
+Possible improvements (deferred — discuss at scale):
+- **Output cache**: hash `userId+templateId+contentVersion+data+theme+logoKey+today` → reuse the S3 PDF on a cache hit (skip render). Only helps repeat traffic; net-cheaper than rendering. Include `today` because system params (`{{today/now/year}}`) make output date-dependent.
+- **Cold start**: provisioned concurrency / SnapStart, smaller bundle (`minify`, drop source maps, dynamic-import Stripe). Deferred until there's traffic.
+- **Persistent Chromium** (ECS/Fargate or Gotenberg) — removes cold start, same engine/fidelity, but always-on cost.
+- **Async email**: move the SES send off the sync response path (via SQS) — it's off the common path today.
+- **Font subsets**: only latin + latin-ext are self-hosted; non-Latin text (Cyrillic/Greek/…) falls back to system fonts. User/AI templates with their own Google Fonts `@import` still fetch remotely (bounded by `FONT_WAIT_MS`).
+- **Do NOT** cache the DynamoDB template row: its `contentVersion` IS the Handlebars-cache invalidation key, and `invalidateTemplateCache` has no external callers — a TTL row cache would serve stale templates after edits.
+- **Gotcha**: `scripts/generate-thumbnails.ts` does not register `mkpdfsLogo` (despite the "MUST stay identical" comment) — regenerating thumbnails for logo-using templates throws `Missing helper: "mkpdfsLogo"`.
+
 ### Database Schema (DynamoDB)
 
 ```typescript
@@ -182,9 +205,9 @@ CI: push `dev` → CDK deploy dev; push `main` → CDK deploy prod (`.github/wor
 
 #### PDF Generation Flow (Sync)
 1. Validate user authentication and subscription
-2. Retrieve template from S3 (`users/{userId}/templates/{templateId}`)
-3. Compile with Handlebars and provided data
-4. Generate PDF using Puppeteer (Chromium layer)
+2. Retrieve template from S3 (`users/{userId}/templates/{templateId}`) — compiled-template + logo caches in front of S3
+3. Compile with Handlebars and provided data; inject local `@font-face` (self-hosted, no remote fetch — see PDF Generation Performance)
+4. Generate PDF using Puppeteer (reused Chromium browser, `waitUntil: 'load'` + bounded font wait)
 5. Upload to S3 (`users/{userId}/pdfs/{pdfId}.pdf`)
 6. Generate pre-signed URL (5-day expiry)
 7. Optionally send email with attachment or link (based on size)
