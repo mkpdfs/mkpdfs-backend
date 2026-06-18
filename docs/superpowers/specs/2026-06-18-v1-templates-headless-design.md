@@ -70,16 +70,20 @@ Excluded (web-only, YAGNI): `POST /templates/logo-upload-url`,
    token grants (`iamOnly` validates nothing against the tokens table). So "same grants as
    the JWT version" is **insufficient** — each v1 fn must also get `grantDualAuth(fn)`
    (= `tables.tokens.grantReadWriteData`), exactly like `generatePdfApiKey` does. Full grant
-   set per v1 fn:
+   set per v1 fn (each = **the exact grants of its JWT sibling**, then ADD `grantDualAuth`):
    - all: `grantDualAuth` (tokens RW) — **the fix above**
    - list: `tables.templates.grantReadData`, `tables.marketplace.grantReadData`, `bucket.grantRead`
    - get: `tables.templates.grantReadData`, `bucket.grantRead`
-   - upload: templates RW, bucket RW, `grantSubscriptionMw`, `grantUsageTracking`
-   - update: templates RW, bucket RW, `grantSubscriptionMw`
-   - delete: templates RW, bucket RW
-   (Mirror each from its JWT sibling, then ADD `grantDualAuth`.)
+   - upload: `tables.templates.grantReadWriteData`, `bucket.grantPut`, `grantSubscriptionMw`, `grantUsageTracking`
+   - update: `tables.templates.grantReadWriteData`, `bucket.grantPut`, `grantSubscriptionMw`
+   - delete: `tables.templates.grantReadWriteData`, `bucket.grantDelete`
+   (Verified against the JWT siblings — note the **least-privilege bucket grants**:
+   `grantPut` for upload/update, `grantDelete` for delete, not a blanket RW.)
 
-4. **No CORS / OPTIONS** — server-to-server, like `/v1/pdf/generate`. No browser preflight.
+4. **No special browser/CORS requirements** — these are server-to-server, like
+   `/v1/pdf/generate`. (The RestApi has default CORS preflight configured globally, so this
+   isn't a strict "no OPTIONS resource" assertion — just that v1 templates need no extra
+   CORS work.)
 
 ### Payload & limits (codex)
 
@@ -87,16 +91,17 @@ Excluded (web-only, YAGNI): `POST /templates/logo-upload-url`,
   `uploadTemplate`'s JSON branch. This avoids the fragile multipart parser entirely; CI
   must use the JSON path.
 - API Gateway REST has a hard **10 MB request limit**; base64 inflates ~33%, so the
-  effective template ceiling is ~7 MB of source. The CLI must enforce a client-side size
-  cap with a clear error before sending. (No authorizer doesn't change this.)
+  effective template ceiling is ~7 MB of source. The CLI must enforce a **client-side size
+  cap of ~6.5 MiB** (a concrete constant, kept under the ~7 MB ceiling to leave room for
+  JSON overhead) with a clear error before sending. (No authorizer doesn't change this.)
 - `binaryMediaTypes` is **not** configured (fine for text Handlebars). Do not enable
   multipart for CI unless the parser is hardened — out of scope here.
 
 ### Route-collision note
 
 `/v1/templates/upload` (static) coexists with `/v1/templates/{templateId}` — safe because
-template IDs are UUIDs (a template literally named `upload` can't occur). Same pattern the
-JWT routes already use.
+template IDs are UUIDs, so a `templateId` literally equal to `upload` can't occur (the risk
+is the *id*, not the template's display name). Same pattern the JWT routes already use.
 
 ## CLI components (`mkpdfs-cli`)
 
@@ -117,10 +122,14 @@ swap (codex):
     in `--api-key` mode, **skip the account guard** (ownership is enforced server-side by
     the token's `userId`; a key can only touch its own account anyway) but **keep the env
     guard and the remote-`updatedAt` drift check**. Document this clearly.
-- **Idempotency (codex):** `upload` always creates a new UUID, so a retried CI *create*
-  duplicates the template. CI must drive updates through a checked-in `.mkpdfs.json` (or an
-  explicit template id), so a retried push resolves to a `PUT` not a fresh create. The
-  drift check (remote `updatedAt`) is preserved under `--api-key` to catch concurrent edits.
+- **Idempotency — enforced, not just documented (codex):** `upload` always creates a new
+  UUID, so a retried CI *create* duplicates the template. To make CI safe by default,
+  `push --api-key` **requires** an existing `.mkpdfs.json` entry for the file (or an explicit
+  `--id`) so the push resolves to a `PUT`; creating a brand-new template headless requires an
+  explicit **`--new`** flag. This preserves today's interactive behavior (where a first push
+  creates) while preventing silent duplicates on CI retries. The remote-`updatedAt` drift
+  check is preserved under `--api-key`. **Do not** emulate API-key mode by passing `--force`
+  — `--force` also skips the drift check, which we want to keep.
 - **README:** broaden the CI section — templates are no longer browser-only; show a CI
   `push`/`pull` example with `MKPDFS_API_KEY`. (Tokens/usage/credits remain JWT-only.)
 
@@ -151,7 +160,9 @@ swap (codex):
   the new Lambda log groups if the monitoring stack requires it (per the CDK runbook).
 - **CLI:** unit tests for the `--api-key` routing (fake client, like `credits_test.go`):
   correct `/v1/...` path + `x-api-key` header per command; `push --api-key` drift fetch via
-  v1; account-guard skipped but env-guard + drift preserved; client-side size-cap error.
+  v1; account-guard skipped but env-guard + drift preserved; client-side size-cap error;
+  **`push --api-key` with no map entry and no `--new` → usage error (exit 2)**, and with
+  `--new` → create path.
 - **Smoke:** add a headless block to `scripts/smoke.sh` — `MKPDFS_API_KEY=... mkp templates
   push/pull/delete --api-key` against dev.
 
