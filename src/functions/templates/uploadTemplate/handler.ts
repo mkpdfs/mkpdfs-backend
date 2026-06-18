@@ -20,7 +20,7 @@ interface UploadTemplateBody {
   thumbnailKey?: string; // S3 key for AI-generated thumbnail
 }
 
-const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = async (event: any) => {
+export const uploadTemplate: ValidatedEventAPIGatewayProxyEvent<UploadTemplateBody> = async (event: any) => {
   try {
     const userId = event.userId!;
     const subscriptionLimits = event.subscriptionLimits;

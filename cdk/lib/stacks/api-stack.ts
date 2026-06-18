@@ -282,6 +282,55 @@ export class ApiStack extends cdk.Stack {
     addRoute('/templates/{templateId}', 'DELETE', deleteTemplate, true);
 
     // =================================================================
+    // TEMPLATES v1 — server-to-server (x-api-key, NO gateway authorizer)
+    // Reuse the JWT handler cores; each fn = JWT sibling's grants + grantDualAuth
+    // (apiKeyOnlyMiddleware reads/updates TOKENS_TABLE before the handler runs).
+    // =================================================================
+    const listTemplatesApiKey = makeFn('ListTemplatesApiKeyFn', {
+      entry: 'src/functions/templates/listTemplatesApiKey/handler.ts',
+    });
+    grantDualAuth(listTemplatesApiKey);
+    tables.templates.grantReadData(listTemplatesApiKey);
+    tables.marketplace.grantReadData(listTemplatesApiKey);
+    bucket.grantRead(listTemplatesApiKey);
+    addRoute('/v1/templates', 'GET', listTemplatesApiKey, false);
+
+    const getTemplateApiKey = makeFn('GetTemplateApiKeyFn', {
+      entry: 'src/functions/templates/getTemplateApiKey/handler.ts',
+    });
+    grantDualAuth(getTemplateApiKey);
+    tables.templates.grantReadData(getTemplateApiKey);
+    bucket.grantRead(getTemplateApiKey);
+    addRoute('/v1/templates/{templateId}', 'GET', getTemplateApiKey, false);
+
+    const uploadTemplateApiKey = makeFn('UploadTemplateApiKeyFn', {
+      entry: 'src/functions/templates/uploadTemplateApiKey/handler.ts',
+    });
+    grantDualAuth(uploadTemplateApiKey);
+    tables.templates.grantReadWriteData(uploadTemplateApiKey);
+    bucket.grantPut(uploadTemplateApiKey);
+    grantSubscriptionMw(uploadTemplateApiKey);
+    grantUsageTracking(uploadTemplateApiKey);
+    addRoute('/v1/templates/upload', 'POST', uploadTemplateApiKey, false);
+
+    const updateTemplateApiKey = makeFn('UpdateTemplateApiKeyFn', {
+      entry: 'src/functions/templates/updateTemplateApiKey/handler.ts',
+    });
+    grantDualAuth(updateTemplateApiKey);
+    tables.templates.grantReadWriteData(updateTemplateApiKey);
+    bucket.grantPut(updateTemplateApiKey);
+    grantSubscriptionMw(updateTemplateApiKey);
+    addRoute('/v1/templates/{templateId}', 'PUT', updateTemplateApiKey, false);
+
+    const deleteTemplateApiKey = makeFn('DeleteTemplateApiKeyFn', {
+      entry: 'src/functions/templates/deleteTemplateApiKey/handler.ts',
+    });
+    grantDualAuth(deleteTemplateApiKey);
+    tables.templates.grantReadWriteData(deleteTemplateApiKey);
+    bucket.grantDelete(deleteTemplateApiKey);
+    addRoute('/v1/templates/{templateId}', 'DELETE', deleteTemplateApiKey, false);
+
+    // =================================================================
     // PDF (layer chromium; dual auth in-lambda)
     // =================================================================
     const generatePdfAsync = makeFn('GeneratePdfAsyncFn', {

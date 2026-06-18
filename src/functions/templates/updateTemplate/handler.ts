@@ -17,7 +17,7 @@ interface UpdateTemplateBody {
   content: string; // Base64 encoded or plain text Handlebars template
 }
 
-const updateTemplate: ValidatedEventAPIGatewayProxyEvent<UpdateTemplateBody> = async (event: any) => {
+export const updateTemplate: ValidatedEventAPIGatewayProxyEvent<UpdateTemplateBody> = async (event: any) => {
   try {
     const userId = event.userId!;
     const templateId = event.pathParameters?.templateId;

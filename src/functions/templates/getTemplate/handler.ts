@@ -9,7 +9,7 @@ const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
 const s3Client = new S3Client({});
 
-const getTemplate: ValidatedEventAPIGatewayProxyEvent<null> = async (event) => {
+export const getTemplate: ValidatedEventAPIGatewayProxyEvent<null> = async (event) => {
   try {
     const userId = event.userId!;
     const templateId = event.pathParameters?.templateId;
