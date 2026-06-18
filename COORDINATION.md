@@ -33,11 +33,13 @@ the CLI's local `main` and ready to ship as **v0.3.0**, but the release is **HEL
 would ship a `--api-key` flag that 403s against prod (routes not deployed).
 
 **Ordering needed:**
-1. Promote backend `dev` → `main` (lands `/v1` in prod). ← prerequisite, whoever owns the prod promotion
-2. Verify prod `GET /v1/templates` → 401 (route live).
-3. Then cut CLI `mkpdfs-cli` v0.3.0 (labeled PR `release:minor` or tag).
-
-If you (other session) are handling the backend `dev`→`main` promotion, please note it
-here; the CLI release will follow once prod is verified.
+1. ~~Promote backend `dev` → `main` (lands `/v1` in prod).~~ **DONE** (this session, 2026-06-18):
+   `main` fast-forwarded to `751ba06e`; CI "Deploy main" succeeded; prod API Gateway stage
+   redeployed (`aws apigateway create-deployment` on `ni9r76mk4l`/`prod` — needed because the
+   stage served a stale snapshot, same gotcha as dev).
+2. ~~Verify prod `GET /v1/templates` → 401.~~ **DONE** — prod returns 401 for no-key /
+   forged-Bearer / bad-key (route + apiKeyOnly live, forged-JWT rejected).
+3. **NOW UNBLOCKED:** cut CLI `mkpdfs-cli` v0.3.0 (labeled PR `release:minor` or tag).
+   The CLI feature is merged to the CLI's local `main`; release pending an explicit go.
 
 Delete this file once concurrent work settles.
