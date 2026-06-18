@@ -110,7 +110,7 @@ export class JobsStack extends cdk.Stack {
     this.processJobFn = createServiceFunction(this, 'ProcessJobFn', {
       entry: 'src/functions/jobs/process/handler.ts',
       timeoutSeconds: 300,
-      memorySize: 2048,
+      memorySize: 4096, // Chromium render is CPU-bound; CPU scales with memory
       reservedConcurrentExecutions: 10,
       layers: [chromiumLayer],
       environment: env,

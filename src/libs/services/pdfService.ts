@@ -9,6 +9,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { Theme } from '../theme/themeTypes';
 import { buildThemeHead } from '../theme/buildThemeStyle';
+import { FONT_FACE_CSS, DEFAULT_FONT_FACE_CSS } from '../theme/generated/fontFaces';
 import { injectIntoHead } from '../theme/injectTheme';
 import { buildSystemParams, SystemParams } from '../systemParams';
 
@@ -16,12 +17,25 @@ const s3Client = new S3Client({});
 const sesService = new SESService();
 const ddbDocClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const MAX_CACHED_TEMPLATES = 100;
+const MAX_CACHED_LOGOS = 100;
 
-// Browser instance reuse - survives across warm Lambda invocations
+// Upper bound on how long we wait for webfonts to settle before printing.
+// We no longer block on full network-idle (see generatePdfFromHtml); this cap
+// keeps a slow/unreachable font CDN from stalling the whole render.
+const FONT_WAIT_MS = 2000;
+
+// Browser instance reuse - survives across warm Lambda invocations.
+// browserLaunch guards against two concurrent renders each launching Chromium.
 let browserInstance: Browser | null = null;
+let browserLaunch: Promise<Browser> | null = null;
 
 // Template compilation cache - avoids re-compiling same templates
 const templateCache = new Map<string, TemplateDelegate>();
+
+// Logo data-URI cache. logoKey embeds a unique id per upload, so a changed
+// logo always yields a new key — caching by key is safe and skips the S3 GET
+// + base64 encode on every branded render.
+const logoCache = new Map<string, string>();
 
 interface GeneratePdfOptions {
   userId: string;
@@ -66,6 +80,15 @@ function registerHandlebarsHelpers(): void {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  });
+
+  // Inline self-hosted @font-face rules (woff2 data: URIs) so templates can
+  // drop remote Google Fonts @import/<link> and render with zero network waits.
+  // Usage: {{{mkpdfsFontFaces}}} (default inter-fraunces) or
+  //        {{{mkpdfsFontFaces "inter-inter"}}}. Triple-stache: raw, unescaped.
+  Handlebars.registerHelper('mkpdfsFontFaces', function (key: any) {
+    const faces = (typeof key === 'string' && FONT_FACE_CSS[key]) || DEFAULT_FONT_FACE_CSS;
+    return new Handlebars.SafeString(faces);
   });
 
   Handlebars.registerHelper('mkpdfsLogo', function (this: any, name: any, options: any) {
@@ -175,15 +198,30 @@ export class PdfService {
     return html;
   }
 
+  /**
+   * Wait for webfonts to finish loading, bounded by FONT_WAIT_MS. Templates
+   * with no remote fonts resolve almost instantly; a slow/unreachable font CDN
+   * can no longer stall the render past the cap.
+   */
+  private static async waitForFonts(page: import('puppeteer-core').Page): Promise<void> {
+    await Promise.race([
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      page.evaluate(() => (globalThis as any).document?.fonts?.ready),
+      new Promise((resolve) => setTimeout(resolve, FONT_WAIT_MS)),
+    ]).catch(() => undefined);
+  }
+
   private async generatePdfFromHtml(html: string): Promise<Buffer> {
     const browser = await this.getBrowser();
 
     const page = await browser.newPage();
     try {
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      // 'load' (not 'networkidle0') — fire once the document + its referenced
+      // resources are in, instead of waiting an extra 500ms quiet window for
+      // the network to go fully idle. Fonts are then bounded by waitForFonts.
+      await page.setContent(html, { waitUntil: 'load' });
       await page.emulateMediaType('screen');
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      await page.evaluate(() => (globalThis as any).document?.fonts?.ready).catch(() => undefined);
+      await PdfService.waitForFonts(page);
 
       const pdfBuffer = await page.pdf({
         format: 'A4',
@@ -213,8 +251,9 @@ export class PdfService {
     try {
       // Set viewport to A4-like aspect ratio (800x1132 is roughly A4)
       await page.setViewport({ width: 800, height: 1132 });
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setContent(html, { waitUntil: 'load' });
       await page.emulateMediaType('screen');
+      await PdfService.waitForFonts(page);
 
       const screenshot = await page.screenshot({
         type: 'png',
@@ -236,17 +275,35 @@ export class PdfService {
     if (browserInstance && browserInstance.isConnected()) {
       return browserInstance;
     }
+    // Coalesce concurrent launches (e.g. two renders in one invocation) onto a
+    // single in-flight promise so we never spawn two Chromium processes.
+    if (browserLaunch) return browserLaunch;
 
-    // Dynamic import for ESM compatibility
-    const chromium = await import('@sparticuz/chromium');
+    browserLaunch = (async () => {
+      // Dynamic import for ESM compatibility
+      const chromium = await import('@sparticuz/chromium');
 
-    browserInstance = await puppeteer.launch({
-      args: chromium.default.args,
-      executablePath: await chromium.default.executablePath(),
-      headless: chromium.default.headless
-    });
+      // Disable font hinting — it has no benefit for print rasterization and
+      // shaves a little per-page layout time.
+      const args = [...chromium.default.args];
+      if (!args.includes('--font-render-hinting=none')) {
+        args.push('--font-render-hinting=none');
+      }
 
-    return browserInstance;
+      const browser = await puppeteer.launch({
+        args,
+        executablePath: await chromium.default.executablePath(),
+        headless: chromium.default.headless,
+      });
+      browserInstance = browser;
+      return browser;
+    })();
+
+    try {
+      return await browserLaunch;
+    } finally {
+      browserLaunch = null;
+    }
   }
 
   private async streamToString(stream: Readable): Promise<string> {
@@ -276,16 +333,27 @@ export class PdfService {
     if (!theme) return undefined;
     let logoDataUri: string | null = null;
     if (theme.logoKey) {
-      try {
-        const obj = await s3Client.send(new GetObjectCommand({
-          Bucket: process.env.ASSETS_BUCKET!,
-          Key: theme.logoKey,
-        }));
-        const bytes = await obj.Body!.transformToByteArray();
-        const contentType = obj.ContentType || 'image/png';
-        logoDataUri = `data:${contentType};base64,${Buffer.from(bytes).toString('base64')}`;
-      } catch (err) {
-        console.error('[pdfService] failed to load logo, falling back to mark:', err);
+      const cached = logoCache.get(theme.logoKey);
+      if (cached) {
+        logoDataUri = cached;
+      } else {
+        try {
+          const obj = await s3Client.send(new GetObjectCommand({
+            Bucket: process.env.ASSETS_BUCKET!,
+            Key: theme.logoKey,
+          }));
+          const bytes = await obj.Body!.transformToByteArray();
+          const contentType = obj.ContentType || 'image/png';
+          logoDataUri = `data:${contentType};base64,${Buffer.from(bytes).toString('base64')}`;
+          logoCache.set(theme.logoKey, logoDataUri);
+          // Bound the cache (LRU-ish: Map preserves insertion order)
+          if (logoCache.size > MAX_CACHED_LOGOS) {
+            const oldest = logoCache.keys().next().value;
+            if (oldest) logoCache.delete(oldest);
+          }
+        } catch (err) {
+          console.error('[pdfService] failed to load logo, falling back to mark:', err);
+        }
       }
     }
     return { brand: theme.brand, accent: theme.accent, fontKey: theme.fontKey, logoDataUri };

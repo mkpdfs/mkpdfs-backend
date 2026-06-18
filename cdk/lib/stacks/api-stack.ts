@@ -297,7 +297,7 @@ export class ApiStack extends cdk.Stack {
     const generatePdf = makeFn('GeneratePdfFn', {
       entry: 'src/functions/pdf/generate/handler.ts',
       timeoutSeconds: 30,
-      memorySize: 2048,
+      memorySize: 4096, // Chromium render is CPU-bound; CPU scales with memory
       layers: [chromiumLayer],
     });
     grantDualAuth(generatePdf);
@@ -321,7 +321,7 @@ export class ApiStack extends cdk.Stack {
     const generatePdfApiKey = makeFn('GeneratePdfApiKeyFn', {
       entry: 'src/functions/pdf/generateApiKey/handler.ts',
       timeoutSeconds: 30,
-      memorySize: 2048,
+      memorySize: 4096, // Chromium render is CPU-bound; CPU scales with memory
       layers: [chromiumLayer],
     });
     grantDualAuth(generatePdfApiKey);

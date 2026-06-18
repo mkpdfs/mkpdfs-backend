@@ -18,6 +18,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Handlebars from 'handlebars';
+import { FONT_FACE_CSS, DEFAULT_FONT_FACE_CSS } from '../src/libs/theme/generated/fontFaces';
 import puppeteer from 'puppeteer-core';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { templates } from './seed-marketplace';
@@ -59,6 +60,10 @@ Handlebars.registerHelper('formatCurrency', function (amount: number) {
     style: 'currency',
     currency: 'USD',
   }).format(amount);
+});
+Handlebars.registerHelper('mkpdfsFontFaces', function (key: any) {
+  const faces = (typeof key === 'string' && FONT_FACE_CSS[key]) || DEFAULT_FONT_FACE_CSS;
+  return new Handlebars.SafeString(faces);
 });
 
 async function main() {
