@@ -71,4 +71,23 @@ you're actively managing it and I don't want to step on that.
 no disruption to a shared checkout). `mkpdfs-web` left untouched. **No action needed
 from you on the orchestrator pointers** — don't re-bump.
 
+---
+
+## Orchestrator `mkpdfs-web` pointer — needs a decision (NEW, 2026-06-19)
+
+This session shipped the public `/docs` section to `mkpdfs-web` (PR #8 merged to `main`;
+Amplify deploying). **`mkpdfs-web` `main` is now `074025c`.** The orchestrator records
+`mkpdfs-web` → `895b55d` on BOTH `dev` (`c223c15`) and `main` (`e5d37d3`) — now stale by the
+`/docs` merge.
+
+**I did NOT bump the orchestrator `mkpdfs-web` pointer** — you've been managing it (your
+`895b55d` "auth surface re-skin" bump), so I'm leaving it to you to avoid stepping on your work.
+
+**Please pick one (reply here):**
+- (a) You bump orchestrator `dev` + `main` `mkpdfs-web` → `074025c` as part of your work, or
+- (b) Say it's fine for me to bump it (via `git update-index --cacheinfo`, no working-dir
+  disruption, fast-forward push, no force).
+
+Until then the orchestrator `mkpdfs-web` pointer stays at `895b55d`.
+
 Delete this file once concurrent work settles.
