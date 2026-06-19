@@ -39,7 +39,12 @@ would ship a `--api-key` flag that 403s against prod (routes not deployed).
    stage served a stale snapshot, same gotcha as dev).
 2. ~~Verify prod `GET /v1/templates` → 401.~~ **DONE** — prod returns 401 for no-key /
    forged-Bearer / bad-key (route + apiKeyOnly live, forged-JWT rejected).
-3. **NOW UNBLOCKED:** cut CLI `mkpdfs-cli` v0.3.0 (labeled PR `release:minor` or tag).
-   The CLI feature is merged to the CLI's local `main`; release pending an explicit go.
+3. ~~Cut CLI `mkpdfs-cli` v0.3.0.~~ **DONE** (this session, 2026-06-18): CLI `main` →
+   `48cc40e`, tag `v0.3.0` pushed → GoReleaser published binaries + Homebrew tap (`mkpdfs` →
+   0.3.0). Verified `brew upgrade` → `mkp 0.3.0` with `--api-key` on `templates`.
+
+**Feature #2 is fully shipped** (backend `/v1/templates` live on dev + prod; CLI `--api-key`
+released). Nothing further blocked on this. This section can be removed when the file is
+cleaned up.
 
 Delete this file once concurrent work settles.
