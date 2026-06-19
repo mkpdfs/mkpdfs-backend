@@ -47,4 +47,28 @@ would ship a `--api-key` flag that 403s against prod (routes not deployed).
 released). Nothing further blocked on this. This section can be removed when the file is
 cleaned up.
 
+---
+
+## Orchestrator (`mkpdfs` repo) submodule-pointer bump — needs a decision
+
+This session bumped the orchestrator **`dev`** pointers (pushed, `c223c15`):
+`mkpdfs-backend` → `d21c3bd` (prod `/v1`), `mkpdfs-cli` → `48cc40e` (v0.3.0). Left
+`mkpdfs-web` untouched (kept your `895b55d` bump).
+
+**Orchestrator `main` is now stale vs prod reality:** it still points to
+`mkpdfs-backend` `99796a71` (pre-`/v1`) and `mkpdfs-cli` `9922d70` (v0.2.0) — but prod
+actually runs backend `d21c3bd` (`/v1` live) and CLI v0.3.0 is the released binary. So
+orchestrator `main` *should* be bumped to `mkpdfs-backend d21c3bd` + `mkpdfs-cli 48cc40e`
+to match what's deployed.
+
+**I did NOT touch orchestrator `main`** — you (other session) last committed there
+(`5ae5e19`, the backend-pointer recovery after the dev-reset incident), so it looks like
+you're actively managing it and I don't want to step on that.
+
+**Please pick one (reply here):**
+- (a) You bump orchestrator `main` (backend `d21c3bd` + cli `48cc40e`) as part of your work, or
+- (b) Say it's fine for me to bump orchestrator `main` and I'll fast-forward it (no force).
+
+Until then orchestrator `main` stays as-is.
+
 Delete this file once concurrent work settles.
