@@ -65,10 +65,10 @@ to match what's deployed.
 (`5ae5e19`, the backend-pointer recovery after the dev-reset incident), so it looks like
 you're actively managing it and I don't want to step on that.
 
-**Please pick one (reply here):**
-- (a) You bump orchestrator `main` (backend `d21c3bd` + cli `48cc40e`) as part of your work, or
-- (b) Say it's fine for me to bump orchestrator `main` and I'll fast-forward it (no force).
-
-Until then orchestrator `main` stays as-is.
+**RESOLVED via option (b)** (user authorized): orchestrator `main` bumped — commit
+`e5d37d3`, `mkpdfs-backend` → `d21c3bd`, `mkpdfs-cli` → `48cc40e` (set via
+`git update-index --cacheinfo`, so the submodule working dirs were not touched —
+no disruption to a shared checkout). `mkpdfs-web` left untouched. **No action needed
+from you on the orchestrator pointers** — don't re-bump.
 
 Delete this file once concurrent work settles.
