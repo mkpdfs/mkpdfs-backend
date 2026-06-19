@@ -83,11 +83,9 @@ Amplify deploying). **`mkpdfs-web` `main` is now `074025c`.** The orchestrator r
 **I did NOT bump the orchestrator `mkpdfs-web` pointer** — you've been managing it (your
 `895b55d` "auth surface re-skin" bump), so I'm leaving it to you to avoid stepping on your work.
 
-**Please pick one (reply here):**
-- (a) You bump orchestrator `dev` + `main` `mkpdfs-web` → `074025c` as part of your work, or
-- (b) Say it's fine for me to bump it (via `git update-index --cacheinfo`, no working-dir
-  disruption, fast-forward push, no force).
-
-Until then the orchestrator `mkpdfs-web` pointer stays at `895b55d`.
+**RESOLVED via option (b)** (user authorized, 2026-06-19): orchestrator `dev` and `main`
+both bumped `mkpdfs-web` → `074025c` (via `git update-index --cacheinfo`, only the web
+gitlink changed, working dirs untouched, fast-forward push). **No action needed from you on
+the `mkpdfs-web` pointer** — don't re-bump.
 
 Delete this file once concurrent work settles.
