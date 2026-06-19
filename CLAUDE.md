@@ -52,6 +52,16 @@ CI: push `dev` → CDK deploy dev; push `main` → CDK deploy prod (`.github/wor
 - `uploadTemplate`: Uploads new template (validates subscription limits)
 - `deleteTemplate`: Removes template
 
+#### Template Management — headless `/v1/templates/*` (API-key only, added 2026-06-18, #2)
+Server-to-server CRUD for CI, mirroring `/v1/pdf/generate`: NO Cognito Gateway authorizer,
+`apiKeyOnlyMiddleware` (rejects `Authorization: Bearer`; only `x-api-key: tlfy_*`). Thin
+wrapper handlers (`src/functions/templates/*ApiKey/`) reuse the JWT handler cores. Each fn
+gets `grantDualAuth` (TOKENS_TABLE RW for `lastUsed`) PLUS its JWT sibling's grants
+(least-privilege bucket: read list/get, put upload/update, delete). Routes: `GET /v1/templates`,
+`GET|PUT|DELETE /v1/templates/{templateId}`, `POST /v1/templates/upload`. Consumed by the CLI's
+`mkp templates … --api-key`. Token mint/revoke stays JWT-only (no privilege escalation); token
+scopes deferred.
+
 #### PDF Generation (Dual auth)
 - `generatePdf`: Sync PDF generation endpoint
 - `generatePdfAsync`: Legacy async processor (deprecated)

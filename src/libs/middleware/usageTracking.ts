@@ -18,9 +18,13 @@ export const usageTrackingMiddleware = (options: UsageTrackingOptions) => {
         userId: handler.event.userId
       });
 
-      // Only track successful requests
-      if (handler.response?.statusCode !== 200) {
-        console.log('[UsageTracking] Skipping - statusCode is not 200');
+      // Only track successful (2xx) requests. NOTE: must accept the whole 2xx
+      // range, not just 200 — uploadTemplate returns 201, so a 200-only check
+      // silently dropped every template_upload stat (on both the JWT and the
+      // /v1 api-key routes).
+      const statusCode = handler.response?.statusCode;
+      if (!statusCode || statusCode < 200 || statusCode >= 300) {
+        console.log('[UsageTracking] Skipping - statusCode not 2xx:', statusCode);
         return;
       }
 
