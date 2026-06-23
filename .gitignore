@@ -31,3 +31,7 @@ npm-debug.log*
 coverage/
 layers/puppeteer/nodejs/node_modules/
 scripts/marketplace-thumbnails/
+
+# transpiled artifacts from ad-hoc ts-node runs (never commit)
+scripts/*.js
+src/libs/theme/generated/*.js
