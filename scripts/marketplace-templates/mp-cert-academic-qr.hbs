@@ -43,7 +43,7 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 18px 60px 20px 60px;
+      padding: 27mm 60px 20px 60px;
     }
 
     .logo-wrap { margin-bottom: 6px; }
@@ -54,7 +54,7 @@
       font-weight: 800;
       color: #111;
       letter-spacing: -0.01em;
-      margin-bottom: 8px;
+      margin-bottom: 14px;
       line-height: 1.1;
     }
 
@@ -62,7 +62,7 @@
       font-size: 15px;
       color: #333;
       font-weight: 400;
-      margin-bottom: 10px;
+      margin-bottom: 18px;
     }
 
     .recipient {
@@ -72,7 +72,8 @@
       color: #111;
       line-height: 1.06;
       letter-spacing: -0.01em;
-      margin-bottom: 14px;
+      margin-top: 6px;
+      margin-bottom: 20px;
       max-width: 230mm;
     }
 
@@ -90,14 +91,14 @@
       font-style: normal;
     }
 
-    .spacer { flex: 1; }
+    .spacer { display: none; }
 
     .bottom-row {
-      width: 100%;
+      position: absolute;
+      left: 60px; right: 60px; bottom: 110px;
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      padding-bottom: 18px;
     }
 
     .qr-section {
@@ -121,7 +122,7 @@
     .date-area {
       position: absolute;
       right: 60px;
-      bottom: 150px;
+      bottom: 205px;
       text-align: right;
       font-size: 12px;
       font-weight: 700;
@@ -145,8 +146,8 @@
 <div class="page">
 
   <svg class="swoosh" viewBox="0 0 1122 793" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M1122 0 L1122 793 L815 793 C655 655 640 375 762 198 C842 86 982 22 1122 0 Z" fill="#ebebed"/>
-    <path d="M1122 55 L1122 793 L905 793 C783 668 772 432 862 282 C932 168 1032 96 1122 55 Z" fill="#f4f4f6"/>
+    <path d="M1122 0 L1122 793 L815 793 C655 655 640 375 762 198 C842 86 982 22 1122 0 Z" fill="#eef0f2"/>
+    <path d="M1122 55 L1122 793 L905 793 C783 668 772 432 862 282 C932 168 1032 96 1122 55 Z" fill="#f7f7f9"/>
   </svg>
 
   <div class="bottom-bar"></div>
