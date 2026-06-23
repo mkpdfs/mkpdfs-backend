@@ -183,21 +183,8 @@ export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'cr
     orientation: 'landscape' as const,
     popularity: 0,
     sampleDataJson: JSON.stringify({
-      brand: {
-        logoUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjAiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAyNjAgNjQiPjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjEyIiBmaWxsPSIjMWEzYThmIi8+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkE8L3RleHQ+PHRleHQgeD0iNzgiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFhM2E4ZiI+QWNtZSBBY2FkZW15PC90ZXh0Pjwvc3ZnPg==',
-        color: '#1a3a8f',
-        colorSecondary: '#c9a227',
-        name: 'Acme Academy'
-      },
-      title: 'Constancia',
-      preamble: 'Otorga la presente constancia a:',
       recipientName: 'John Eymar Rodríguez Arteaga',
-      body: 'Por haber cursado satisfactoriamente el curso de:',
-      courseName: 'WSO2 Identity Server: Gestión de Identidad y Acceso',
-      details: 'Con duración de 21 horas.',
-      meta: { hours: '21', date: 'Junio 2026', location: '' },
-      signatures: [{ name: 'Director Académico', title: 'Instructor', imageUrl: '' }],
-      folio: 'AC-2026-0001'
+      courseName: 'WSO2 Identity Server: Gestión de Identidad y Acceso'
     })
   },
   {
