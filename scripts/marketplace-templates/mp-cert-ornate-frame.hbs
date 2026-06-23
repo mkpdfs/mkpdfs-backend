@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><style>
-{{{mkpdfsFontFaces}}}
+{{{mkpdfsFontFaces "lora-source-sans"}}}
 @page { size: A4 landscape; margin: 0; }
 * { margin:0; padding:0; box-sizing:border-box; }
-html,body { width:297mm; height:210mm; font-family:'Fraunces',Georgia,'Times New Roman',serif; color:#1a1a1a; -webkit-font-smoothing:antialiased; }
+html,body { width:297mm; height:210mm; font-family:'Lora',Georgia,'Times New Roman',serif; color:#1a1a1a; -webkit-font-smoothing:antialiased; }
 .page { width:297mm; height:210mm; position:relative; overflow:hidden; background:#fff; }
 .frame-outer { position:absolute; top:7mm; left:7mm; right:7mm; bottom:7mm; border:2.5px solid #1f5fa8; }
 .frame-inner { position:absolute; top:9.5mm; left:9.5mm; right:9.5mm; bottom:9.5mm; border:1px solid #1f5fa8; }
@@ -12,7 +12,7 @@ html,body { width:297mm; height:210mm; font-family:'Fraunces',Georgia,'Times New
 .med.bl { bottom:3mm; left:3mm; } .med.br { bottom:3mm; right:3mm; }
 .content { position:absolute; top:16mm; left:24mm; right:24mm; z-index:5; display:flex; flex-direction:column; align-items:center; text-align:center; }
 .logo { height:19mm; width:auto; margin-bottom:2px; }
-.addr { font-family:'Inter',sans-serif; font-size:9.5px; color:#444; margin-bottom:8px; border-bottom:1px solid #bbb; padding-bottom:4px; }
+.addr { font-family:'Source Sans 3',sans-serif; font-size:9.5px; color:#444; margin-bottom:8px; border-bottom:1px solid #bbb; padding-bottom:4px; }
 .diploma { font-size:33px; font-weight:800; color:#1f5fa8; letter-spacing:3px; margin-bottom:2px; }
 .concedido { font-size:17px; color:#222; margin-bottom:6px; }
 .name { font-size:25px; font-weight:800; color:#111; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; }
@@ -23,11 +23,11 @@ html,body { width:297mm; height:210mm; font-family:'Fraunces',Georgia,'Times New
 .sig-row { position:absolute; left:38mm; right:38mm; bottom:66mm; display:flex; justify-content:space-between; align-items:flex-end; z-index:6; }
 .sig { width:170px; text-align:center; }
 .sig svg { display:block; margin:0 auto -4px; }
-.sig-cap { font-family:'Inter',sans-serif; font-size:11px; color:#222; border-top:1px solid #444; padding-top:3px; }
+.sig-cap { font-family:'Source Sans 3',sans-serif; font-size:11px; color:#222; border-top:1px solid #444; padding-top:3px; }
 .stamp { position:absolute; right:46mm; bottom:58mm; z-index:7; }
-.legal { position:absolute; left:0; right:0; bottom:13mm; text-align:center; font-family:'Inter',sans-serif; font-size:9px; color:#555; z-index:6; }
+.legal { position:absolute; left:0; right:0; bottom:13mm; text-align:center; font-family:'Source Sans 3',sans-serif; font-size:9px; color:#555; z-index:6; }
 .legal .l1 { font-style:italic; margin-bottom:3px; }
-.dotline { position:absolute; left:24mm; bottom:70mm; font-family:'Inter',sans-serif; font-size:13px; letter-spacing:3px; color:#999; z-index:6; }
+.dotline { position:absolute; left:24mm; bottom:70mm; font-family:'Source Sans 3',sans-serif; font-size:13px; letter-spacing:3px; color:#999; z-index:6; }
 </style></head><body>
 <div class="page">
   <div class="frame-outer"></div>
@@ -49,7 +49,7 @@ html,body { width:297mm; height:210mm; font-family:'Fraunces',Georgia,'Times New
     <div class="sig"><svg width="150" height="50" viewBox="0 0 150 50"><path d="M8 38 C30 0 40 50 60 18 C72 2 84 44 100 22 C116 2 128 40 144 12" fill="none" stroke="#1f5fa8" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/></svg><div class="sig-cap">El Director</div></div>
     <div class="sig"><svg width="150" height="50" viewBox="0 0 150 50"><path d="M6 28 C24 36 30 4 46 16 C58 25 54 8 70 18 C86 28 96 6 112 20 C126 32 134 16 146 26" fill="none" stroke="#1f5fa8" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/></svg><div class="sig-cap">El Jefe de Estudios</div></div>
   </div>
-  <div class="stamp"><svg width="120" height="86" viewBox="0 0 120 86"><g transform="rotate(-12 60 43)"><ellipse cx="60" cy="43" rx="55" ry="38" fill="none" stroke="#1f5fa8" stroke-width="1.3" opacity="0.65"/><ellipse cx="60" cy="43" rx="44" ry="29" fill="none" stroke="#1f5fa8" stroke-width="0.7" opacity="0.65"/><defs><path id="aT" d="M 16 43 A 44 29 0 0 1 104 43"/><path id="aB" d="M 22 43 A 38 25 0 0 0 98 43"/></defs><text font-family="Inter,Arial" font-size="7" font-weight="700" fill="#1f5fa8" opacity="0.65" letter-spacing="1.2"><textPath href="#aT" startOffset="50%" text-anchor="middle">ARENAL INFORMATICA</textPath></text><text font-family="Inter,Arial" font-size="6" font-weight="600" fill="#1f5fa8" opacity="0.65" letter-spacing="0.6"><textPath href="#aB" startOffset="50%" text-anchor="middle">COORDINACION MADRID</textPath></text><text x="60" y="50" font-family="Fraunces,serif" font-size="22" font-weight="800" fill="#1f5fa8" opacity="0.65" text-anchor="middle">A</text></g></svg></div>
+  <div class="stamp"><svg width="120" height="86" viewBox="0 0 120 86"><g transform="rotate(-12 60 43)"><ellipse cx="60" cy="43" rx="55" ry="38" fill="none" stroke="#1f5fa8" stroke-width="1.3" opacity="0.65"/><ellipse cx="60" cy="43" rx="44" ry="29" fill="none" stroke="#1f5fa8" stroke-width="0.7" opacity="0.65"/><defs><path id="aT" d="M 16 43 A 44 29 0 0 1 104 43"/><path id="aB" d="M 22 43 A 38 25 0 0 0 98 43"/></defs><text font-family="Source Sans 3,Arial" font-size="7" font-weight="700" fill="#1f5fa8" opacity="0.65" letter-spacing="1.2"><textPath href="#aT" startOffset="50%" text-anchor="middle">ARENAL INFORMATICA</textPath></text><text font-family="Source Sans 3,Arial" font-size="6" font-weight="600" fill="#1f5fa8" opacity="0.65" letter-spacing="0.6"><textPath href="#aB" startOffset="50%" text-anchor="middle">COORDINACION MADRID</textPath></text><text x="60" y="50" font-family="Lora,serif" font-size="22" font-weight="800" fill="#1f5fa8" opacity="0.65" text-anchor="middle">A</text></g></svg></div>
   <div class="legal">
     <div class="l1">Enseñanza no reglada sin carácter oficial</div>
     <div>Enseñanzas acogidas al decreto 707/1976 de 5 de marzo del Ministerio de Educación y Ciencia sobre ordenación de la Formación Profesional, artículo 35.</div>
