@@ -11,6 +11,8 @@
 ## Global Constraints
 
 - All 6 templates: `category: 'certificates'`, landscape A4 (`@page { size: A4 landscape; margin: 0 }`), brand-agnostic — logo is always `{{brand.logoUrl}}`, never hardcoded.
+- **HIGH FIDELITY (overrides any "inspired/clean" wording):** each template must reproduce its reference image **as closely as possible** — the client needs output that matches what they already have. Match the layout, proportions, color palette (sample the actual colors from the image), decorative shapes (corner triangles, wave lines, ornamental frames, geometric panels, sidebar bars — rebuild them as inline SVG/CSS to match), title/heading style, and overall composition. The implementer MUST open the reference image with the Read tool before writing and compare its rendered thumbnail back against it. Only the brand identity is variabilized (logo/name/colors via data); the *structure* should look like the sample.
+- Reference images (landscape PNGs): Task 5 → `/Users/sim4r4/.claude/image-cache/f894df53-20a1-4197-9fbb-30f4bd2a8028/1.png` (NobleProg), Task 6 → `2.png` (Global Lynx), Task 7 → `3.png` (UDLA), Task 8 → `4.png` (Arenal), Task 9 → `5.png` (Databricks/A+), Task 10 → `6.png` (UPAEP), same directory.
 - Fonts: self-hosted only, via `{{{mkpdfsFontFaces}}}` helper (no remote `@import`/`<link>`).
 - Helpers MUST be registered identically in `src/libs/services/pdfService.ts` AND `scripts/generate-thumbnails.ts`.
 - `qrcode-generator` is a runtime dependency bundled by esbuild — NOT added to the Lambda layer.
@@ -409,7 +411,7 @@ git commit -m "feat: <id> marketplace certificate template"
 
 ### Task 5: `mp-cert-corporate-diagonal` (NobleProg style)
 
-**Layout:** Reference image 1. Two filled diagonal triangles in the top-left and bottom-right corners (brand color with a thin `--brand-2` gold edge — two stacked CSS triangles). Logo top-right. Centered column: very large bold `{{title}}` (heading font, ~46px), `{{preamble}}`, `{{recipientName}}` in `--brand` (~34px), `{{body}}`, `{{courseName}}` (serif, bold), `{{details}}`. One centered signature (`SIG_BLOCK`). No QR. Optional `FOLIO_BLOCK` bottom-left.
+**Layout:** Reproduce `/Users/sim4r4/.claude/image-cache/f894df53-20a1-4197-9fbb-30f4bd2a8028/1.png` faithfully (Read it first). Two filled diagonal triangles in the top-left and bottom-right corners (brand color with a thin `--brand-2` gold edge — two stacked CSS triangles). Logo top-right. Centered column: very large bold `{{title}}` (heading font, ~46px), `{{preamble}}`, `{{recipientName}}` in `--brand` (~34px), `{{body}}`, `{{courseName}}` (serif, bold), `{{details}}`. One centered signature (`SIG_BLOCK`). No QR. Optional `FOLIO_BLOCK` bottom-left.
 
 - [ ] **Step 1:** Write `scripts/marketplace-templates/mp-cert-corporate-diagonal.hbs` per the spec above using Task 4 snippets.
 - [ ] **Step 2:** Add the seed entry with `name: 'Corporate Diagonal Certificate'`, `tags: ['certificate','constancia','corporate','course']`, and sampleData:
@@ -434,7 +436,7 @@ git commit -m "feat: <id> marketplace certificate template"
 
 ### Task 6: `mp-cert-waves-seal` (Global Lynx style)
 
-**Layout:** Reference image 2. Light-blue flowing wave lines top-right and bottom-left (inline SVG `<path>` strokes in `--brand` at low opacity). Logo top-center. Centered: `{{title}}` big in `--brand`, `{{preamble}}`, `{{recipientName}}` in a script/heading font in `--brand` with an underline, `{{body}}`, `{{courseName}}` (bold, letter-spaced), `{{details}}`. A circular seal (inline SVG ring with `{{brand.name}}` around it — reuse the seal SVG pattern from `mp-cert-completion.hbs` but ringed text). **Two** signatures via `SIG_BLOCK`. No QR.
+**Layout:** Reproduce `/Users/sim4r4/.claude/image-cache/f894df53-20a1-4197-9fbb-30f4bd2a8028/2.png` faithfully (Read it first). Light-blue flowing wave lines top-right and bottom-left (inline SVG `<path>` strokes in `--brand` at low opacity). Logo top-center. Centered: `{{title}}` big in `--brand`, `{{preamble}}`, `{{recipientName}}` in a script/heading font in `--brand` with an underline, `{{body}}`, `{{courseName}}` (bold, letter-spaced), `{{details}}`. A circular seal (inline SVG ring with `{{brand.name}}` around it — reuse the seal SVG pattern from `mp-cert-completion.hbs` but ringed text). **Two** signatures via `SIG_BLOCK`. No QR.
 
 - [ ] **Step 1:** Write `scripts/marketplace-templates/mp-cert-waves-seal.hbs`.
 - [ ] **Step 2:** Add seed entry, `name: 'Waves & Seal Certificate'`, `tags: ['certificate','constancia','seal','formal']`, sampleData:
@@ -460,7 +462,7 @@ git commit -m "feat: <id> marketplace certificate template"
 
 ### Task 7: `mp-cert-academic-qr` (UDLA style)
 
-**Layout:** Reference image 3. Clean academic. Soft grey swoosh in the background (one large inline SVG path, very light). Logo top-center. `{{brand.name}}` as a large heading line, `{{preamble}}` ("Certifica que:"), `{{recipientName}}` very large bold black on a subtle highlight band, `{{body}}`, `{{meta.location}} {{meta.date}}` right-aligned. `QR_BLOCK` bottom-left with a "Verifícalo en:" label and `{{verifyUrl}}` text under it. One signature (`SIG_BLOCK`) bottom-center-right.
+**Layout:** Reproduce `/Users/sim4r4/.claude/image-cache/f894df53-20a1-4197-9fbb-30f4bd2a8028/3.png` faithfully (Read it first). Clean academic. Soft grey swoosh in the background (one large inline SVG path, very light). Logo top-center. `{{brand.name}}` as a large heading line, `{{preamble}}` ("Certifica que:"), `{{recipientName}}` very large bold black on a subtle highlight band, `{{body}}`, `{{meta.location}} {{meta.date}}` right-aligned. `QR_BLOCK` bottom-left with a "Verifícalo en:" label and `{{verifyUrl}}` text under it. One signature (`SIG_BLOCK`) bottom-center-right.
 
 - [ ] **Step 1:** Write `scripts/marketplace-templates/mp-cert-academic-qr.hbs` (uses `QR_BLOCK`).
 - [ ] **Step 2:** Add seed entry, `name: 'Academic Certificate (QR)'`, `tags: ['certificate','constancia','academic','qr','university']`, sampleData:
@@ -483,7 +485,7 @@ git commit -m "feat: <id> marketplace certificate template"
 
 ### Task 8: `mp-cert-ornate-frame` (Arenal style)
 
-**Layout:** Reference image 4. Ornamental double border in `--brand` around the whole page (outer thick + inner thin rule via nested bordered divs) with a small decorative medallion in each of the 4 corners (inline SVG rosette). Logo top-center. `{{title}}` ("Diploma"), `{{preamble}}` ("Concedido a"), `{{recipientName}}` bold, `{{body}}`, `{{courseName}}` big bold, `{{details}}`. **Two** signatures (`SIG_BLOCK`) with a small ink-style stamp SVG between/near them. No QR. Small print line `{{meta.location}}` at the bottom.
+**Layout:** Reproduce `/Users/sim4r4/.claude/image-cache/f894df53-20a1-4197-9fbb-30f4bd2a8028/4.png` faithfully (Read it first). Ornamental double border in `--brand` around the whole page (outer thick + inner thin rule via nested bordered divs) with a small decorative medallion in each of the 4 corners (inline SVG rosette). Logo top-center. `{{title}}` ("Diploma"), `{{preamble}}` ("Concedido a"), `{{recipientName}}` bold, `{{body}}`, `{{courseName}}` big bold, `{{details}}`. **Two** signatures (`SIG_BLOCK`) with a small ink-style stamp SVG between/near them. No QR. Small print line `{{meta.location}}` at the bottom.
 
 - [ ] **Step 1:** Write `scripts/marketplace-templates/mp-cert-ornate-frame.hbs`.
 - [ ] **Step 2:** Add seed entry, `name: 'Ornate Frame Diploma'`, `tags: ['certificate','diploma','ornate','formal','frame']`, sampleData:
@@ -509,7 +511,7 @@ git commit -m "feat: <id> marketplace certificate template"
 
 ### Task 9: `mp-cert-geometric-qr` (Databricks/A+ style)
 
-**Layout:** Reference image 5. Angular geometric color panels down the left edge and bottom-right (overlapping CSS clip-path / SVG polygons in `--brand` + a darker shade). **Two logos** top: `{{brand.logoUrl}}` top-left, `{{#if brand.logoUrl2}}{{brand.logoUrl2}}{{/if}}` top-right. `{{title}}` ("Reconocimiento a:") left-aligned, `{{recipientName}}` bold, `{{body}}`. One signature (`SIG_BLOCK`) left of center. `QR_BLOCK` on the right. Footer line `Fecha: {{meta.date}}` bottom-left.
+**Layout:** Reproduce `/Users/sim4r4/.claude/image-cache/f894df53-20a1-4197-9fbb-30f4bd2a8028/5.png` faithfully (Read it first). Angular geometric color panels down the left edge and bottom-right (overlapping CSS clip-path / SVG polygons in `--brand` + a darker shade). **Two logos** top: `{{brand.logoUrl}}` top-left, `{{#if brand.logoUrl2}}{{brand.logoUrl2}}{{/if}}` top-right. `{{title}}` ("Reconocimiento a:") left-aligned, `{{recipientName}}` bold, `{{body}}`. One signature (`SIG_BLOCK`) left of center. `QR_BLOCK` on the right. Footer line `Fecha: {{meta.date}}` bottom-left.
 
 - [ ] **Step 1:** Write `scripts/marketplace-templates/mp-cert-geometric-qr.hbs` (uses `QR_BLOCK`; uses `brand.logoUrl2`).
 - [ ] **Step 2:** Add seed entry, `name: 'Geometric Certificate (QR)'`, `tags: ['certificate','constancia','geometric','qr','modern']`, sampleData:
@@ -531,7 +533,7 @@ git commit -m "feat: <id> marketplace certificate template"
 
 ### Task 10: `mp-cert-sidebar-minimal` (UPAEP style)
 
-**Layout:** Reference image 6. Full-height vertical color bar (`--brand`) down the left ~12mm edge. All content left-aligned with generous left margin. Logo top-left. `{{brand.name}} otorga la presente`, `{{title}}` ("Constancia"), `A: {{recipientName}}` very large bold, `{{body}}`, `{{details}}`, `Valor curricular: {{meta.hours}} horas`. Footer: an italic motto line + `{{meta.location}} {{meta.date}}` bottom-left, and one signature (`SIG_BLOCK`, but left-aligned not centered — override `.sigs { justify-content: flex-end }`) bottom-right. No QR.
+**Layout:** Reproduce `/Users/sim4r4/.claude/image-cache/f894df53-20a1-4197-9fbb-30f4bd2a8028/6.png` faithfully (Read it first). Full-height vertical color bar (`--brand`) down the left ~12mm edge. All content left-aligned with generous left margin. Logo top-left. `{{brand.name}} otorga la presente`, `{{title}}` ("Constancia"), `A: {{recipientName}}` very large bold, `{{body}}`, `{{details}}`, `Valor curricular: {{meta.hours}} horas`. Footer: an italic motto line + `{{meta.location}} {{meta.date}}` bottom-left, and one signature (`SIG_BLOCK`, but left-aligned not centered — override `.sigs { justify-content: flex-end }`) bottom-right. No QR.
 
 - [ ] **Step 1:** Write `scripts/marketplace-templates/mp-cert-sidebar-minimal.hbs`.
 - [ ] **Step 2:** Add seed entry, `name: 'Sidebar Minimal Certificate'`, `tags: ['certificate','constancia','minimal','sidebar','university']`, sampleData:
