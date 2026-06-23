@@ -12,6 +12,7 @@ import { buildThemeHead } from '../theme/buildThemeStyle';
 import { FONT_FACE_CSS, DEFAULT_FONT_FACE_CSS } from '../theme/generated/fontFaces';
 import { injectIntoHead } from '../theme/injectTheme';
 import { buildSystemParams, SystemParams } from '../systemParams';
+import qrcode from 'qrcode-generator';
 
 const s3Client = new S3Client({});
 const sesService = new SESService();
@@ -89,6 +90,19 @@ function registerHandlebarsHelpers(): void {
   Handlebars.registerHelper('mkpdfsFontFaces', function (key: any) {
     const faces = (typeof key === 'string' && FONT_FACE_CSS[key]) || DEFAULT_FONT_FACE_CSS;
     return new Handlebars.SafeString(faces);
+  });
+
+  // Synchronous QR from a verify URL. Handlebars helpers can't await, so we use
+  // qrcode-generator (sync) rather than the async `qrcode` package.
+  // Usage: {{{mkpdfsQR verifyUrl}}} or {{{mkpdfsQR verifyUrl ec="H"}}}
+  Handlebars.registerHelper('mkpdfsQR', function (url: any, options: any) {
+    if (!url || typeof url !== 'string') return '';
+    const ec = (options?.hash?.ec as string) || 'M';
+    const qr = qrcode(0, ec as any); // 0 = auto-fit version
+    qr.addData(url);
+    qr.make();
+    const svg = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    return new Handlebars.SafeString(svg);
   });
 
   Handlebars.registerHelper('mkpdfsLogo', function (this: any, name: any, options: any) {
