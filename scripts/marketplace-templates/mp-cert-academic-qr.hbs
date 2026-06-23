@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {{{mkpdfsFontFaces}}}
+
+    :root {
+      --brand: {{#if brand.color}}{{brand.color}}{{else}}#8a1538{{/if}};
+      --brand-2: {{#if brand.colorSecondary}}{{brand.colorSecondary}}{{else}}#b0b0b8{{/if}};
+      --ink: #16151A;
+      --muted: #5b5b66;
+      --line: #d8d8de;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    @page { size: A4 landscape; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 297mm; height: 210mm; }
+
+    .page {
+      width: 297mm;
+      height: 210mm;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Background swoosh (large grey ribbon from right) ---- */
+    .bg-swoosh {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 297mm;
+      height: 210mm;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ---- Logo top-center ---- */
+    .logo-wrap {
+      position: absolute;
+      top: 10mm;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .logo {
+      display: block;
+      max-height: 22mm;
+      max-width: 70mm;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* ---- Main content column ---- */
+    .content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 50mm; /* leave space for bottom bar */
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 30mm;
+      text-align: center;
+    }
+
+    /* Space for logo at top */
+    .logo-spacer {
+      height: 40mm;
+      flex-shrink: 0;
+    }
+
+    /* Brand name heading */
+    .brand-name {
+      font-family: var(--font-body);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: 0.01em;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .preamble {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* Recipient name on a subtle highlight band */
+    .recipient-wrap {
+      width: 100%;
+      background: #f5f5f5;
+      border-radius: 4px;
+      padding: 8px 24px;
+      margin-bottom: 12px;
+    }
+
+    .recipient-name {
+      font-family: var(--font-heading);
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.15;
+    }
+
+    .body-text {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--muted);
+      max-width: 200mm;
+      line-height: 1.5;
+      margin-bottom: 0;
+    }
+
+    /* Location / date right-aligned, inside bottom bar area */
+    .meta-row {
+      position: absolute;
+      bottom: 54mm;
+      right: 10mm;
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--muted);
+      z-index: 10;
+      text-align: right;
+    }
+
+    /* ---- Bottom bar: QR left + sig right ---- */
+    .bottom-bar {
+      position: absolute;
+      bottom: 8mm;
+      left: 10mm;
+      right: 10mm;
+      z-index: 10;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    /* QR block bottom-left */
+    .qr-area {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .qr-label {
+      font-family: var(--font-body);
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .qr {
+      width: 26mm;
+      height: 26mm;
+      padding: 2mm;
+      background: #fff;
+      border: 1px solid #eee;
+    }
+
+    .qr svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .qr-url {
+      font-family: var(--font-body);
+      font-size: 7px;
+      color: var(--muted);
+      max-width: 40mm;
+      word-break: break-all;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    /* ---- Signature block (right side) ---- */
+    .sigs {
+      display: flex;
+      justify-content: center;
+      gap: 36mm;
+    }
+
+    .sig {
+      text-align: center;
+      width: 70mm;
+    }
+
+    .sig-img {
+      height: 16mm;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto -2mm;
+    }
+
+    .sig-line {
+      width: 60mm;
+      height: 1px;
+      background: var(--ink);
+      margin: 0 auto 6px;
+    }
+
+    .sig-name {
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .sig-title {
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Soft grey swoosh background (sweeping ribbon from right) -->
+    <svg class="bg-swoosh" viewBox="0 0 1122 794" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <!-- Main ribbon sweeping from upper-right across to lower area -->
+      <path d="M 680,0 C 760,60 840,180 860,300 C 880,420 820,520 900,640 C 940,700 1000,750 1122,794 L 1122,0 Z"
+        fill="#e0e0e0" fill-opacity="0.55"/>
+      <path d="M 800,0 C 870,70 940,200 960,320 C 980,440 920,560 1000,680 C 1040,740 1080,770 1122,794 L 1122,0 Z"
+        fill="#e8e8e8" fill-opacity="0.40"/>
+      <path d="M 940,0 C 990,80 1040,220 1050,360 C 1060,480 1020,600 1080,720 L 1122,794 L 1122,0 Z"
+        fill="#f0f0f0" fill-opacity="0.30"/>
+    </svg>
+
+    <!-- Logo top-center -->
+    <div class="logo-wrap">
+      {{#if brand.logoUrl}}<img class="logo" src="{{brand.logoUrl}}" alt="{{brand.name}}">{{/if}}
+    </div>
+
+    <!-- Main certificate content -->
+    <div class="content">
+      <div class="logo-spacer"></div>
+
+      {{#if brand.name}}<div class="brand-name">{{brand.name}}</div>{{/if}}
+
+      <div class="preamble">{{preamble}}</div>
+
+      <div class="recipient-wrap">
+        <div class="recipient-name">{{recipientName}}</div>
+      </div>
+
+      <div class="body-text">{{body}}</div>
+    </div>
+
+    <!-- Meta row (location + date), right-aligned above bottom bar -->
+    <div class="meta-row">
+      {{#if meta.location}}{{meta.location}}{{/if}}{{#if meta.date}}{{#if meta.location}} {{/if}}a {{meta.date}}{{/if}}
+    </div>
+
+    <!-- Bottom bar: QR left, signature right -->
+    <div class="bottom-bar">
+
+      <!-- QR block bottom-left -->
+      {{#if verifyUrl}}
+      <div class="qr-area">
+        <div class="qr-label">Verifícalo en:</div>
+        <div class="qr">{{{mkpdfsQR verifyUrl}}}</div>
+        <div class="qr-url">{{verifyUrl}}</div>
+      </div>
+      {{/if}}
+
+      <!-- One signature bottom-right -->
+      <div class="sigs">
+        {{#each signatures}}
+        <div class="sig">
+          {{#if imageUrl}}<img class="sig-img" src="{{imageUrl}}" alt="">{{/if}}
+          <div class="sig-line"></div>
+          <div class="sig-name">{{name}}</div>
+          {{#if title}}<div class="sig-title">{{title}}</div>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+
+    </div>
+
+  </div>
+</body>
+</html>
