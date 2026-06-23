@@ -153,7 +153,7 @@ Expected: clean.
 Render an existing portrait marketplace template locally to confirm it stays portrait:
 ```bash
 CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  npx ts-node scripts/generate-thumbnails.ts dev --only=mp-cert-completion
+  npx ts-node --transpile-only scripts/generate-thumbnails.ts dev --only=mp-cert-completion
 ```
 Open `scripts/marketplace-thumbnails/mp-cert-completion.png` — must still be portrait A4 proportions (taller than wide). (Note: this exercises the thumbnail path, not `page.pdf`, but confirms the template itself is unchanged. The `page.pdf` fallback is verified end-to-end in Task 11.)
 
@@ -256,7 +256,7 @@ Expected: clean.
 
 - [ ] **Step 5: Regression render (portrait still works)**
 
-Run: `CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npx ts-node scripts/generate-thumbnails.ts dev --only=mp-cert-completion`
+Run: `CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npx ts-node --transpile-only scripts/generate-thumbnails.ts dev --only=mp-cert-completion`
 Expected: `✓ rendered mp-cert-completion.png`, still portrait proportions.
 
 - [ ] **Step 6: Commit**
@@ -395,7 +395,7 @@ Each template task has the SAME shape. For every template: (a) write `scripts/ma
 **Common render+eyeball step** (replace `<id>`):
 ```bash
 CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  npx ts-node scripts/generate-thumbnails.ts dev --only=<id>
+  npx ts-node --transpile-only scripts/generate-thumbnails.ts dev --only=<id>
 open scripts/marketplace-thumbnails/<id>.png   # must be landscape, brand colors applied, sigs/QR placed
 ```
 
@@ -576,7 +576,7 @@ Expected: `✅ Successfully seeded` listing the 6 new certificate templates (and
 
 - [ ] **Step 4: Generate + upload all thumbnails to dev**
 
-Run: `CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" AWS_PROFILE=rocketeast npx ts-node scripts/generate-thumbnails.ts dev --upload`
+Run: `CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" AWS_PROFILE=rocketeast npx ts-node --transpile-only scripts/generate-thumbnails.ts dev --upload`
 Expected: all templates render; the 6 certs are landscape; uploaded to `s3://mkpdfs-dev-bucket/marketplace/thumbnails/`.
 
 - [ ] **Step 5: End-to-end PDF verification (real payload)**
@@ -652,7 +652,7 @@ Expected: 6 certs seeded to prod.
 
 - [ ] **Step 4: Generate + upload prod thumbnails**
 
-Run: `CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" AWS_PROFILE=rocketeast npx ts-node scripts/generate-thumbnails.ts prod --upload`
+Run: `CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" AWS_PROFILE=rocketeast npx ts-node --transpile-only scripts/generate-thumbnails.ts prod --upload`
 Expected: 6 landscape thumbnails uploaded to `s3://mkpdfs-prod-bucket/marketplace/thumbnails/`.
 
 - [ ] **Step 5: Smoke-check prod**
