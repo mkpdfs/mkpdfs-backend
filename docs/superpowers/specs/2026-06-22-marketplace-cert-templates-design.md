@@ -150,14 +150,17 @@ inline SVG/CSS (no external images beyond logo/signatures).
 - `seed-marketplace.ts`: add 6 entries (`category: 'certificates'`) with realistic
   `sampleDataJson` and a new optional field **`orientation: 'landscape'`** on the
   `MarketplaceTemplate` interface (defaults portrait when absent).
-- **Real brand logos in sample data**: fetch each reference brand's official logo
-  (NobleProg, Global Lynx, UDLA, Arenal Informática, Databricks + A+, UPAEP) from its
-  site and embed as a small `data:image/...;base64,…` URI in that template's
-  `sampleDataJson.brand.logoUrl` (and `logoUrl2` for the geometric/dual-logo layout),
-  so each thumbnail/preview matches the supplied reference. Templates stay
-  brand-agnostic — only the *sample* data carries a real logo. Prefer transparent PNG
-  or SVG; downscale to ≤~40KB each. Fetch via `curl` (or WebFetch/WebSearch to locate
-  the asset URL), `base64`, paste into the seed entry.
+- **Neutral placeholder logos in the public sample data**: the seeded `sampleDataJson`
+  for each template uses a small brand-neutral placeholder logo (generic mark + made-up
+  org name, embedded data-URI) so public marketplace thumbnails carry no third-party
+  trademark. Templates stay brand-agnostic — the logo is always `{{brand.logoUrl}}`.
+- **Real brand logos → client only (not seeded)**: deliver a separate, non-public
+  handoff with ready-to-use example payloads for the 6 reference brands (NobleProg,
+  Global Lynx, UDLA, Arenal Informática, Databricks + A+, UPAEP) — each a JSON `data`
+  object with that brand's real logo (fetched from its site, base64 data-URI or URL),
+  real signatures, and `verifyUrl`. This goes to the client (e.g.
+  `docs/client-handoff/cert-example-payloads.md`, gitignored or kept out of the public
+  marketplace seed), NOT into `seed-marketplace.ts`.
 - `generate-thumbnails.ts`: register `mkpdfsQR`; read `orientation`; for landscape set
   viewport/clip to 1123×794 (A4 landscape @96dpi); also replace the slow
   `networkidle0` wait with `load` + `document.fonts.ready` (matches the runtime path
@@ -182,7 +185,8 @@ mkpdfs-backend/
 
 ## Rollout
 
-0. Fetch the 6–7 real brand logos, downscale, base64-embed into the seed sample data.
+0. Build 1–2 neutral placeholder logos for the public sample data. Separately, fetch
+   the 6 real brand logos for the client handoff payloads (not seeded).
 1. Implement helper + `preferCSSPageSize`; `npm run typecheck`.
 2. Author the 6 `.hbs`; render locally via `generate-thumbnails.ts --only=<id>` and eyeball.
 3. `cdk:deploy:dev` (ships the helper + preferCSSPageSize change).
@@ -206,8 +210,5 @@ mkpdfs-backend/
   follow-up only if it looks bad.
 - **Brand fonts**: inspired/clean fidelity means we use system self-hosted fonts, not
   the exact brand fonts in the samples. Accepted.
-- **Third-party trademarks in public previews**: the marketplace is public, so seeding
-  real brand logos (NobleProg, UPAEP, …) into sample data puts third-party marks on
-  public thumbnails. Per the client's request we use the real logos; flagged here as a
-  conscious choice. Swap to neutral placeholders later if it becomes a concern — the
-  templates don't depend on any specific logo.
+- **Third-party trademarks**: resolved — public sample data uses neutral placeholders;
+  real brand logos live only in the client handoff payloads, never in the public seed.
