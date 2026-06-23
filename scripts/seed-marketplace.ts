@@ -35,6 +35,7 @@ export interface MarketplaceTemplate {
   thumbnailKey: string;
   sampleDataJson: string;
   tags: string[];
+  orientation?: 'portrait' | 'landscape'; // default portrait; certs are landscape
   popularity: number;
   createdAt: string;
   updatedAt: string;

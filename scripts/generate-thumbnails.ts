@@ -20,6 +20,7 @@ import * as path from 'path';
 import Handlebars from 'handlebars';
 import { FONT_FACE_CSS, DEFAULT_FONT_FACE_CSS } from '../src/libs/theme/generated/fontFaces';
 import puppeteer from 'puppeteer-core';
+import qrcode from 'qrcode-generator';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { templates } from './seed-marketplace';
 
@@ -40,6 +41,9 @@ const CHROME_PATH =
 // A4 at 96dpi
 const A4_W = 794;
 const A4_H = 1123;
+// A4 landscape at 96dpi
+const A4_LAND_W = 1123;
+const A4_LAND_H = 794;
 
 const s3Client = new S3Client({ region });
 
@@ -64,6 +68,14 @@ Handlebars.registerHelper('formatCurrency', function (amount: number) {
 Handlebars.registerHelper('mkpdfsFontFaces', function (key: any) {
   const faces = (typeof key === 'string' && FONT_FACE_CSS[key]) || DEFAULT_FONT_FACE_CSS;
   return new Handlebars.SafeString(faces);
+});
+Handlebars.registerHelper('mkpdfsQR', function (url: any, options: any) {
+  if (!url || typeof url !== 'string') return '';
+  const ec = (options?.hash?.ec as string) || 'M';
+  const qr = qrcode(0, ec as any);
+  qr.addData(url);
+  qr.make();
+  return new Handlebars.SafeString(qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }));
 });
 
 async function main() {
@@ -96,9 +108,13 @@ async function main() {
       const data = JSON.parse(t.sampleDataJson);
       const html = Handlebars.compile(fs.readFileSync(filePath, 'utf-8'))(data);
 
+      const landscape = t.orientation === 'landscape';
+      const W = landscape ? A4_LAND_W : A4_W;
+      const H = landscape ? A4_LAND_H : A4_H;
+
       const page = await browser.newPage();
-      await page.setViewport({ width: A4_W, height: A4_H, deviceScaleFactor: 2 });
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setViewport({ width: W, height: H, deviceScaleFactor: 2 });
+      await page.setContent(html, { waitUntil: 'load' });
       await page.evaluate(async () => {
         await (document as any).fonts.ready;
       });
@@ -107,7 +123,7 @@ async function main() {
       const shot = Buffer.from(
         await page.screenshot({
           type: 'png',
-          clip: { x: 0, y: 0, width: A4_W, height: A4_H },
+          clip: { x: 0, y: 0, width: W, height: H },
         })
       );
       fs.writeFileSync(outPath, shot);
