@@ -403,7 +403,7 @@ open scripts/marketplace-thumbnails/<id>.png   # must be landscape, brand colors
 
 **Common commit step** (replace `<id>`):
 ```bash
-git add scripts/marketplace-templates/<id>.hbs scripts/seed-marketplace.ts scripts/marketplace-thumbnails/<id>.png
+git add scripts/marketplace-templates/<id>.hbs scripts/seed-marketplace.ts   # NOT the .png — thumbnails dir is gitignored, lives on disk + S3
 git commit -m "feat: <id> marketplace certificate template"
 ```
 
