@@ -210,20 +210,8 @@ export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'cr
     orientation: 'landscape' as const,
     popularity: 0,
     sampleDataJson: JSON.stringify({
-      brand: {
-        logoUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjAiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAyNjAgNjQiPjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjEyIiBmaWxsPSIjMWEzYThmIi8+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkE8L3RleHQ+PHRleHQgeD0iNzgiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFhM2E4ZiI+QWNtZSBBY2FkZW15PC90ZXh0Pjwvc3ZnPg==',
-        color: '#8a1538',
-        colorSecondary: '#b0b0b8',
-        name: 'Universidad Acme'
-      },
-      title: 'Constancia',
-      preamble: 'Certifica que:',
       recipientName: 'Miguel Aramis Ramírez Ibarra',
-      body: 'Ha participado y aprobado satisfactoriamente el curso de Desarrollo de software',
-      courseName: 'Desarrollo de software',
-      meta: { hours: '', date: '20 de octubre 2024', location: 'Puebla, Pue.' },
-      signatures: [{ name: 'Marlena León Mendoza', title: 'Vicerrectora Académica', imageUrl: '' }],
-      verifyUrl: 'https://certificados.example.edu/verify/1261958CBA8A'
+      courseName: 'Desarrollo de software'
     })
   },
   {
