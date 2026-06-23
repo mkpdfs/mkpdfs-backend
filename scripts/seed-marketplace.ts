@@ -254,6 +254,34 @@ export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'cr
       verifyUrl: 'https://certificados.example.edu/verify/1261958CBA8A'
     })
   },
+  {
+    templateId: 'mp-cert-ornate-frame',
+    category: 'certificates',
+    name: 'Ornate Frame Diploma',
+    description: 'Classic Spanish-style diploma with an ornamental double border, decorative corner medallions in brand color, two-signature layout, and an ink stamp. Landscape A4.',
+    tags: ['certificate', 'diploma', 'ornate', 'formal', 'frame'],
+    orientation: 'landscape' as const,
+    popularity: 0,
+    sampleDataJson: JSON.stringify({
+      brand: {
+        logoUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjAiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAyNjAgNjQiPjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjEyIiBmaWxsPSIjMWEzYThmIi8+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkE8L3RleHQ+PHRleHQgeD0iNzgiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFhM2E4ZiI+QWNtZSBBY2FkZW15PC90ZXh0Pjwvc3ZnPg==',
+        color: '#1f6fb2',
+        colorSecondary: '#7fb0d8',
+        name: 'Acme Informática'
+      },
+      title: 'Diploma',
+      preamble: 'Concedido a',
+      recipientName: 'Miguel Aramis Ramírez Ibarra',
+      body: 'que ha realizado, con aprovechamiento, el curso de:',
+      courseName: 'Máster en Programación',
+      details: 'Tras desarrollar el temario del curso y realizadas las prácticas correspondientes, ha demostrado un alto nivel de interés, superando las pruebas de aptitud, por lo que consigue un grado de NOTABLE.',
+      meta: { hours: '', date: '', location: 'Enseñanza no reglada sin carácter oficial' },
+      signatures: [
+        { name: 'El Director', title: '', imageUrl: '' },
+        { name: 'El Jefe de Estudios', title: '', imageUrl: '' }
+      ]
+    })
+  },
 
   // Marketing
   {
