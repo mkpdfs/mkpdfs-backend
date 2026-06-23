@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {{{mkpdfsFontFaces}}}
+
+    :root {
+      --brand: {{#if brand.color}}{{brand.color}}{{else}}#176b2c{{/if}};
+      --brand-2: {{#if brand.colorSecondary}}{{brand.colorSecondary}}{{else}}#0c3d18{{/if}};
+      --ink: #16151A;
+      --muted: #5b5b66;
+      --line: #d8d8de;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    @page { size: A4 landscape; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 297mm; height: 210mm; }
+
+    .page {
+      width: 297mm;
+      height: 210mm;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Geometric panels (SVG, absolute, z-index 0) ---- */
+    .geo-panels {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 297mm;
+      height: 210mm;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ---- Top logo bar ---- */
+    .logo-bar {
+      position: absolute;
+      top: 10mm;
+      left: 52mm;   /* clear the left geometric panel */
+      right: 10mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .logo {
+      display: block;
+      max-height: 18mm;
+      max-width: 60mm;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .logo-right {
+      display: block;
+      max-height: 18mm;
+      max-width: 60mm;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* ---- Main content ---- */
+    .content {
+      position: absolute;
+      top: 32mm;
+      left: 52mm;   /* clear the left geometric panel */
+      right: 10mm;
+      bottom: 48mm; /* leave room for bottom bar */
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 0 6mm;
+    }
+
+    .brand-name {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--brand);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .recipient-name {
+      font-family: var(--font-heading);
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .body-text {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 150mm;
+      line-height: 1.55;
+    }
+
+    /* ---- Bottom bar: sig left-center + QR right ---- */
+    .bottom-bar {
+      position: absolute;
+      bottom: 46mm;
+      left: 52mm;
+      right: 10mm;
+      z-index: 10;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    /* Footer date — sits on the dark bottom panel, so white */
+    .footer-date {
+      position: absolute;
+      bottom: 10mm;
+      left: 52mm;
+      font-family: var(--font-body);
+      font-size: 9px;
+      color: #fff;
+      z-index: 10;
+    }
+
+    /* ---- Signature block ---- */
+    .sigs {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .sig {
+      text-align: center;
+      width: 65mm;
+    }
+
+    .sig-img {
+      height: 16mm;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto -2mm;
+    }
+
+    .sig-line {
+      width: 55mm;
+      height: 1px;
+      background: var(--ink);
+      margin: 0 auto 6px;
+    }
+
+    .sig-name {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .sig-title {
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ---- QR block ---- */
+    .qr-area {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .qr-label {
+      font-family: var(--font-body);
+      font-size: 7px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .qr {
+      width: 26mm;
+      height: 26mm;
+      padding: 2mm;
+      background: #fff;
+      border: 1px solid #eee;
+    }
+
+    .qr svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Geometric angular panels — left edge + bottom sweep -->
+    <svg class="geo-panels" viewBox="0 0 1122 794" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <!-- Left panel: tall multi-faceted shape -->
+      <polygon points="0,0 170,0 140,200 170,400 130,600 160,794 0,794" fill-opacity="1" style="fill:var(--brand-2)"/>
+      <polygon points="0,0 130,0 100,220 130,430 90,640 110,794 0,794" fill-opacity="1" style="fill:var(--brand)"/>
+      <!-- Secondary inner facet for depth -->
+      <polygon points="0,0 80,0 55,250 80,480 45,700 60,794 0,794" fill-opacity="0.7" style="fill:var(--brand-2)"/>
+
+      <!-- Bottom sweep: angled band from left across bottom -->
+      <polygon points="0,700 1122,640 1122,794 0,794" fill-opacity="1" style="fill:var(--brand-2)"/>
+      <polygon points="0,730 1122,670 1122,794 0,794" fill-opacity="1" style="fill:var(--brand)"/>
+      <!-- Bottom-right accent facet -->
+      <polygon points="900,794 1122,710 1122,794" fill-opacity="0.6" style="fill:var(--brand-2)"/>
+    </svg>
+
+    <!-- Logo bar: left logo + right logo -->
+    <div class="logo-bar">
+      {{#if brand.logoUrl}}<img class="logo" src="{{brand.logoUrl}}" alt="{{brand.name}}">{{/if}}
+      {{#if brand.logoUrl2}}<img class="logo-right" src="{{brand.logoUrl2}}" alt="">{{/if}}
+    </div>
+
+    <!-- Main certificate content -->
+    <div class="content">
+      {{#if brand.name}}<div class="brand-name">{{brand.name}}</div>{{/if}}
+
+      <div class="title">{{title}}</div>
+
+      <div class="recipient-name">{{recipientName}}</div>
+
+      <div class="body-text">{{body}}</div>
+    </div>
+
+    <!-- Footer date on dark bottom panel -->
+    <div class="footer-date">{{#if meta.date}}Fecha: {{meta.date}}{{/if}}</div>
+
+    <!-- Bottom bar: sig + QR (above the sweep) -->
+    <div class="bottom-bar">
+
+      <!-- One signature center-left -->
+      <div class="sigs">
+        {{#each signatures}}
+        <div class="sig">
+          {{#if imageUrl}}<img class="sig-img" src="{{imageUrl}}" alt="">{{/if}}
+          <div class="sig-line"></div>
+          <div class="sig-name">{{name}}</div>
+          {{#if title}}<div class="sig-title">{{title}}</div>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+
+      <!-- QR block right -->
+      {{#if verifyUrl}}
+      <div class="qr-area">
+        <div class="qr-label">Verificar en:</div>
+        <div class="qr">{{{mkpdfsQR verifyUrl}}}</div>
+      </div>
+      {{/if}}
+
+    </div>
+
+  </div>
+</body>
+</html>

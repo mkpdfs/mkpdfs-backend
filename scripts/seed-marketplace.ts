@@ -255,6 +255,31 @@ export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'cr
     })
   },
   {
+    templateId: 'mp-cert-geometric-qr',
+    category: 'certificates',
+    name: 'Geometric Certificate (QR)',
+    description: 'Bold constancia with angular geometric color panels on the left edge and bottom sweep, two logos across the top, large recipient name, QR verification code, and one signature. Landscape A4.',
+    tags: ['certificate', 'constancia', 'geometric', 'qr', 'modern'],
+    orientation: 'landscape' as const,
+    popularity: 0,
+    sampleDataJson: JSON.stringify({
+      brand: {
+        logoUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjAiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAyNjAgNjQiPjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjEyIiBmaWxsPSIjMWEzYThmIi8+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkE8L3RleHQ+PHRleHQgeD0iNzgiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFhM2E4ZiI+QWNtZSBBY2FkZW15PC90ZXh0Pjwvc3ZnPg==',
+        logoUrl2: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjAiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAyNjAgNjQiPjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjEyIiBmaWxsPSIjMWEzYThmIi8+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkE8L3RleHQ+PHRleHQgeD0iNzgiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFhM2E4ZiI+QWNtZSBBY2FkZW15PC90ZXh0Pjwvc3ZnPg==',
+        color: '#176b2c',
+        colorSecondary: '#0c3d18',
+        name: 'Acme Capacitación'
+      },
+      title: 'Reconocimiento a:',
+      preamble: '',
+      recipientName: 'Victor Manuel Coutiño Silva',
+      body: 'Por su participación y aprovechamiento en el programa.',
+      meta: { hours: '', date: '23 de octubre del 2024', location: '' },
+      signatures: [{ name: 'Eduardo Barrón Delgado', title: 'Director académico', imageUrl: '' }],
+      verifyUrl: 'https://verify.example.com/recon/VMCS-2024'
+    })
+  },
+  {
     templateId: 'mp-cert-ornate-frame',
     category: 'certificates',
     name: 'Ornate Frame Diploma',
