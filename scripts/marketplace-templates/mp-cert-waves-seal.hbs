@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {{{mkpdfsFontFaces}}}
+
+    :root {
+      --brand: {{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}};
+      --brand-2: {{#if brand.colorSecondary}}{{brand.colorSecondary}}{{else}}#9bb8e6{{/if}};
+      --ink: #16151A;
+      --muted: #5b5b66;
+      --line: #d8d8de;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    @page { size: A4 landscape; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 297mm; height: 210mm; }
+
+    .page {
+      width: 297mm;
+      height: 210mm;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Wave decorations ---- */
+    .wave-tr {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 320px;
+      height: 260px;
+      overflow: visible;
+      z-index: 1;
+    }
+
+    .wave-bl {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 320px;
+      height: 220px;
+      overflow: visible;
+      z-index: 1;
+    }
+
+    /* ---- Logo top-center ---- */
+    .logo-wrap {
+      position: absolute;
+      top: 10mm;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .logo {
+      display: block;
+      max-height: 22mm;
+      max-width: 70mm;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* ---- Main content column ---- */
+    .content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10mm 36mm 0;
+      text-align: center;
+    }
+
+    /* Space for logo */
+    .logo-spacer {
+      height: 26mm;
+      flex-shrink: 0;
+    }
+
+    .cert-title {
+      font-family: var(--font-body);
+      font-size: 46px;
+      font-weight: 900;
+      color: var(--brand);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.0;
+      margin-bottom: 8px;
+    }
+
+    .preamble {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .recipient-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 34px;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--brand);
+      border-bottom: 1.5px solid var(--brand);
+      padding-bottom: 3px;
+      margin-bottom: 8px;
+      letter-spacing: 0.01em;
+      line-height: 1.2;
+    }
+
+    .body-text {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .course-name {
+      font-family: var(--font-body);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .details-text {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 180mm;
+      margin-bottom: 8px;
+    }
+
+    /* ---- Seal ---- */
+    .seal-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ---- Signature block ---- */
+    .sigs {
+      display: flex;
+      justify-content: center;
+      gap: 40mm;
+      margin-top: 4px;
+    }
+
+    .sig {
+      text-align: center;
+      width: 68mm;
+    }
+
+    .sig-img {
+      height: 14mm;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto -2mm;
+    }
+
+    .sig-line {
+      width: 56mm;
+      height: 1px;
+      background: var(--ink);
+      margin: 0 auto 5px;
+    }
+
+    .sig-name {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .sig-title {
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Wave lines top-right -->
+    <svg class="wave-tr" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <g fill="none" stroke="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}" stroke-opacity="0.13" stroke-width="2.2" stroke-linecap="round">
+        <path d="M320,20 C260,50 200,10 160,60 C120,110 80,70 40,100 C20,115 0,130 -20,140"/>
+        <path d="M320,44 C265,72 205,34 165,84 C125,134 82,94 42,122 C22,136 0,152 -20,162"/>
+        <path d="M320,68 C270,94 210,58 170,108 C130,158 84,118 44,144 C24,157 2,174 -20,184"/>
+        <path d="M320,92 C275,116 215,82 175,132 C135,182 86,142 46,166 C26,178 4,196 -20,206"/>
+        <path d="M320,116 C280,138 220,106 180,156 C140,206 88,166 48,188 C28,199 6,218 -20,228"/>
+        <path d="M320,140 C285,160 225,130 185,180 C145,230 90,190 50,210 C30,220 8,240 -20,250"/>
+        <path d="M320,164 C290,182 230,154 190,204 C150,254 92,214 52,232 C32,241 10,262 -20,272"/>
+        <path d="M320,188 C295,204 235,178 195,228 C155,278 94,238 54,254 C34,262 12,284 -20,294"/>
+      </g>
+    </svg>
+
+    <!-- Wave lines bottom-left -->
+    <svg class="wave-bl" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <g fill="none" stroke="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}" stroke-opacity="0.13" stroke-width="2.2" stroke-linecap="round">
+        <path d="M0,200 C60,170 120,210 160,160 C200,110 240,150 280,120 C300,105 320,90 340,80"/>
+        <path d="M0,176 C55,148 115,186 155,136 C195,86 238,126 278,98 C298,84 318,68 340,58"/>
+        <path d="M0,152 C50,126 110,162 150,112 C190,62 236,102 276,76 C296,63 316,46 340,36"/>
+        <path d="M0,128 C45,104 105,138 145,88 C185,38 234,78 274,54 C294,42 314,24 340,14"/>
+        <path d="M0,104 C40,82 100,114 140,64 C180,14 232,54 272,32 C292,21 312,2 340,-8"/>
+        <path d="M0,80 C35,60 95,90 135,40 C175,-10 230,30 270,10 C290,0 310,-20 340,-30"/>
+        <path d="M0,56 C30,38 90,66 130,16 C170,-34 228,6 268,-12 C288,-21 308,-42 340,-52"/>
+        <path d="M0,32 C25,16 85,42 125,-8 C165,-58 226,-18 266,-34 C286,-42 306,-64 340,-74"/>
+      </g>
+    </svg>
+
+    <!-- Logo top-center -->
+    <div class="logo-wrap">
+      {{#if brand.logoUrl}}<img class="logo" src="{{brand.logoUrl}}" alt="{{brand.name}}">{{/if}}
+    </div>
+
+    <!-- Main certificate content -->
+    <div class="content">
+      <div class="logo-spacer"></div>
+
+      <div class="cert-title">{{title}}</div>
+
+      <div class="preamble">{{preamble}}</div>
+
+      <div class="recipient-name">{{recipientName}}</div>
+
+      <div class="body-text">{{body}}</div>
+
+      <div class="course-name">{{courseName}}</div>
+
+      <div class="details-text">{{details}}</div>
+
+      <!-- Circular seal (inline SVG) -->
+      <div class="seal-wrap">
+        <svg width="90" height="90" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer ring -->
+          <circle cx="45" cy="45" r="42" fill="none"
+            stroke="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}"
+            stroke-width="2.5" stroke-opacity="0.9"/>
+          <!-- Inner ring -->
+          <circle cx="45" cy="45" r="35" fill="none"
+            stroke="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}"
+            stroke-width="1" stroke-opacity="0.5"/>
+          <!-- Center mark: small logo placeholder circle -->
+          <circle cx="45" cy="45" r="16" fill="none"
+            stroke="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}"
+            stroke-width="1.5" stroke-opacity="0.6"/>
+          <circle cx="45" cy="45" r="8" fill="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}" fill-opacity="0.15"/>
+          <!-- Star/mark in center -->
+          <text x="45" y="49" text-anchor="middle"
+            font-family="Arial, sans-serif" font-size="11"
+            fill="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}" font-weight="bold">★</text>
+          <!-- Circular brand name text (top arc) -->
+          <defs>
+            <path id="top-arc" d="M 9,45 A 36,36 0 0 1 81,45"/>
+            <path id="bot-arc" d="M 81,45 A 36,36 0 0 1 9,45"/>
+          </defs>
+          <text font-family="Arial, sans-serif" font-size="7.5" font-weight="600" letter-spacing="1.5"
+            fill="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}">
+            <textPath href="#top-arc" startOffset="50%" text-anchor="middle">{{brand.name}}</textPath>
+          </text>
+          <text font-family="Arial, sans-serif" font-size="7" letter-spacing="1"
+            fill="{{#if brand.color}}{{brand.color}}{{else}}#15428b{{/if}}" fill-opacity="0.7">
+            <textPath href="#bot-arc" startOffset="50%" text-anchor="middle">SELLO DIGITAL VERIFICADO</textPath>
+          </text>
+        </svg>
+      </div>
+
+      <!-- Two signatures spread left / right -->
+      <div class="sigs">
+        {{#each signatures}}
+        <div class="sig">
+          {{#if imageUrl}}<img class="sig-img" src="{{imageUrl}}" alt="">{{/if}}
+          <div class="sig-line"></div>
+          <div class="sig-name">{{name}}</div>
+          {{#if title}}<div class="sig-title">{{title}}</div>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+
+    </div>
+
+  </div>
+</body>
+</html>

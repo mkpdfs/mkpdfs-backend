@@ -200,6 +200,34 @@ export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'cr
       folio: 'AC-2026-0001'
     })
   },
+  {
+    templateId: 'mp-cert-waves-seal',
+    category: 'certificates',
+    name: 'Waves & Seal Certificate',
+    description: 'Elegant constancia-style certificate with flowing wave accents (top-right / bottom-left), a centered circular seal, script recipient name, and two-signature layout. Landscape A4.',
+    tags: ['certificate', 'constancia', 'seal', 'formal'],
+    orientation: 'landscape' as const,
+    popularity: 0,
+    sampleDataJson: JSON.stringify({
+      brand: {
+        logoUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjAiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAyNjAgNjQiPjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjEyIiBmaWxsPSIjMWEzYThmIi8+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkE8L3RleHQ+PHRleHQgeD0iNzgiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFhM2E4ZiI+QWNtZSBBY2FkZW15PC90ZXh0Pjwvc3ZnPg==',
+        color: '#15428b',
+        colorSecondary: '#9bb8e6',
+        name: 'Acme Academy'
+      },
+      title: 'Constancia',
+      preamble: 'Se otorga el presente constancia a:',
+      recipientName: 'Francisco J. Núñez I.',
+      body: 'Por haber completado satisfactoriamente el curso:',
+      courseName: 'CompTIA Security+',
+      details: 'Con una duración de 40 horas, cubriendo análisis de ciberseguridad, gestión de vulnerabilidades, detección de amenazas y respuesta a incidentes en entornos empresariales.',
+      meta: { hours: '40', date: 'Octubre 2024', location: '' },
+      signatures: [
+        { name: 'Lic. Daniel Ortega Vargas', title: 'Chief Executive Officer', imageUrl: '' },
+        { name: 'Mtro. Alejandro Hernández Ruiz', title: 'Instructor', imageUrl: '' }
+      ]
+    })
+  },
 
   // Marketing
   {
