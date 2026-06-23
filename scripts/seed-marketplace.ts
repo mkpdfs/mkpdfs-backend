@@ -308,6 +308,33 @@ export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'cr
     })
   },
 
+  {
+    templateId: 'mp-cert-sidebar-minimal',
+    category: 'certificates',
+    name: 'Sidebar Minimal Certificate',
+    description: 'Clean, left-aligned constancia with a full-height brand color sidebar, oversized bold recipient name, and a bottom-right signature. Minimal whitespace design — UPAEP style. Landscape A4.',
+    tags: ['certificate', 'constancia', 'minimal', 'sidebar', 'university'],
+    orientation: 'landscape' as const,
+    popularity: 0,
+    sampleDataJson: JSON.stringify({
+      brand: {
+        logoUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjAiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAyNjAgNjQiPjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjEyIiBmaWxsPSIjMWEzYThmIi8+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzMCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkE8L3RleHQ+PHRleHQgeD0iNzgiIHk9IjQyIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFhM2E4ZiI+QWNtZSBBY2FkZW15PC90ZXh0Pjwvc3ZnPg==',
+        color: '#d3122a',
+        colorSecondary: '#8a8a90',
+        name: 'Universidad Acme'
+      },
+      title: 'Constancia',
+      preamble: 'otorga la presente',
+      recipientName: 'Victor Manuel Coutiño Silva',
+      body: 'Por su participación en el Curso Virtual de: Bootcamps de programación',
+      details: 'Impartido por esta Universidad del 15 de mayo de 2025 al 15 de julio de 2025.',
+      meta: { hours: '40', date: 'Agosto 2024', location: 'Puebla, Pue.' },
+      signatures: [
+        { name: 'Ing. Cesar Orozco Gamiño', title: 'Director Académico de Ingenierías', imageUrl: '' }
+      ]
+    })
+  },
+
   // Marketing
   {
     templateId: 'mp-marketing-brochure',

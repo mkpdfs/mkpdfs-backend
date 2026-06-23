@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    {{{mkpdfsFontFaces}}}
+
+    :root {
+      --brand: {{#if brand.color}}{{brand.color}}{{else}}#d3122a{{/if}};
+      --brand-2: {{#if brand.colorSecondary}}{{brand.colorSecondary}}{{else}}#8a8a90{{/if}};
+      --ink: #16151A;
+      --muted: #5b5b66;
+      --line: #d8d8de;
+      --font-heading: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    @page { size: A4 landscape; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 297mm; height: 210mm; }
+
+    .page {
+      width: 297mm;
+      height: 210mm;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      flex-direction: row;
+    }
+
+    /* ---- Full-height left color bar ---- */
+    .sidebar {
+      width: 14mm;
+      min-width: 14mm;
+      background: var(--brand);
+      height: 210mm;
+      flex-shrink: 0;
+    }
+
+    /* ---- Main content area ---- */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 14mm 18mm 10mm 14mm;
+      position: relative;
+    }
+
+    /* ---- Logo ---- */
+    .logo-wrap {
+      margin-bottom: 10mm;
+    }
+    .logo {
+      display: block;
+      max-height: 22mm;
+      max-width: 70mm;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* ---- Preamble (brand.name otorga la presente) ---- */
+    .preamble {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    /* ---- Title (e.g. Constancia) ---- */
+    .cert-title {
+      font-family: var(--font-heading);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.02em;
+      margin-bottom: 8mm;
+    }
+
+    /* ---- Recipient block ---- */
+    .recipient-wrap {
+      margin-bottom: 6mm;
+    }
+    .recipient-prefix {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-bottom: 2px;
+    }
+    .recipient-name {
+      font-family: var(--font-heading);
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+
+    /* ---- Body text ---- */
+    .body-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ink);
+      margin-bottom: 3mm;
+      line-height: 1.4;
+    }
+
+    /* ---- Details ---- */
+    .details-text {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4mm;
+      line-height: 1.4;
+    }
+
+    /* ---- Valor curricular ---- */
+    .hours-line {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: auto;
+    }
+
+    /* ---- Footer area ---- */
+    .footer {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-top: 6mm;
+    }
+
+    .footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .motto {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .location-date {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ---- Signature block (right-aligned) ---- */
+    .sigs { display: flex; justify-content: flex-end; gap: 36mm; }
+    .sig { text-align: center; width: 70mm; }
+    .sig-img { height: 16mm; object-fit: contain; display: block; margin: 0 auto -2mm; }
+    .sig-line {
+      width: 60mm;
+      height: 1px;
+      background: var(--ink);
+      margin: 0 auto 6px;
+    }
+    .sig-name { font-family: var(--font-heading); font-size: 13px; font-weight: 600; }
+    .sig-title { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Full-height left color bar -->
+    <div class="sidebar"></div>
+
+    <!-- Main content -->
+    <div class="content">
+
+      <!-- Logo top-left -->
+      <div class="logo-wrap">
+        {{#if brand.logoUrl}}<img class="logo" src="{{brand.logoUrl}}" alt="{{brand.name}}">{{/if}}
+      </div>
+
+      <!-- Preamble: brand.name otorga la presente -->
+      <div class="preamble">{{#if brand.name}}{{brand.name}}{{/if}}{{#if preamble}} {{preamble}}{{/if}}</div>
+
+      <!-- Title -->
+      <div class="cert-title">{{title}}</div>
+
+      <!-- Recipient name (very large, bold) -->
+      <div class="recipient-wrap">
+        <div class="recipient-prefix">A:</div>
+        <div class="recipient-name">{{recipientName}}</div>
+      </div>
+
+      <!-- Body -->
+      {{#if body}}<div class="body-text">{{body}}</div>{{/if}}
+
+      <!-- Details -->
+      {{#if details}}<div class="details-text">{{details}}</div>{{/if}}
+
+      <!-- Valor curricular hours -->
+      {{#if meta.hours}}<div class="hours-line">Valor curricular: {{meta.hours}} horas</div>{{/if}}
+
+      <!-- Footer: motto + location/date bottom-left, signature bottom-right -->
+      <div class="footer">
+
+        <div class="footer-left">
+          {{#if motto}}<div class="motto">{{motto}}</div>{{/if}}
+          <div class="location-date">{{#if meta.location}}{{meta.location}}{{/if}}{{#if meta.date}} &nbsp;{{meta.date}}{{/if}}</div>
+        </div>
+
+        <!-- Signature (right) -->
+        <div class="sigs">
+          {{#each signatures}}
+          <div class="sig">
+            {{#if imageUrl}}<img class="sig-img" src="{{imageUrl}}" alt="">{{/if}}
+            <div class="sig-line"></div>
+            <div class="sig-name">{{name}}</div>
+            {{#if title}}<div class="sig-title">{{title}}</div>{{/if}}
+          </div>
+          {{/each}}
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</body>
+</html>
