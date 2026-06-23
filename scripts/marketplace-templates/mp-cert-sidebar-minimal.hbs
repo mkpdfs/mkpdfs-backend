@@ -11,7 +11,6 @@
       --ink: #16151A;
       --muted: #5b5b66;
       --line: #d8d8de;
-      --font-heading: 'Fraunces', Georgia, serif;
       --font-body: 'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
     }
 
@@ -29,10 +28,10 @@
       flex-direction: row;
     }
 
-    /* ---- Full-height left color bar ---- */
+    /* ---- Full-height left color bar (~5-6% = ~15mm) ---- */
     .sidebar {
-      width: 14mm;
-      min-width: 14mm;
+      width: 15mm;
+      min-width: 15mm;
       background: var(--brand);
       height: 210mm;
       flex-shrink: 0;
@@ -43,75 +42,76 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 14mm 18mm 10mm 14mm;
+      padding: 12mm 16mm 10mm 14mm;
       position: relative;
     }
 
-    /* ---- Logo ---- */
+    /* ---- Logo top-left ---- */
     .logo-wrap {
       margin-bottom: 10mm;
     }
     .logo {
       display: block;
-      max-height: 22mm;
+      max-height: 14mm;
       max-width: 70mm;
       width: auto;
       height: auto;
       object-fit: contain;
     }
 
-    /* ---- Preamble (brand.name otorga la presente) ---- */
+    /* ---- Preamble ("Universidad Acme otorga la presente") ---- */
     .preamble {
       font-family: var(--font-body);
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
-    /* ---- Title (e.g. Constancia) ---- */
+    /* ---- Title ("Constancia") — medium, bold, sans ---- */
     .cert-title {
-      font-family: var(--font-heading);
-      font-size: 26px;
+      font-family: var(--font-body);
+      font-size: 22px;
       font-weight: 700;
       color: var(--ink);
-      letter-spacing: 0.02em;
+      letter-spacing: 0.01em;
       margin-bottom: 8mm;
     }
 
     /* ---- Recipient block ---- */
     .recipient-wrap {
-      margin-bottom: 6mm;
+      margin-bottom: 7mm;
     }
     .recipient-prefix {
       font-family: var(--font-body);
-      font-size: 14px;
+      font-size: 13px;
       color: var(--muted);
       font-weight: 400;
       margin-bottom: 2px;
     }
+    /* Large bold SANS — no serif */
     .recipient-name {
-      font-family: var(--font-heading);
-      font-size: 42px;
+      font-family: var(--font-body);
+      font-size: 30px;
       font-weight: 700;
       color: var(--ink);
-      line-height: 1.1;
+      line-height: 1.15;
       letter-spacing: -0.01em;
     }
 
     /* ---- Body text ---- */
     .body-text {
       font-family: var(--font-body);
-      font-size: 14px;
+      font-size: 13px;
       color: var(--ink);
-      margin-bottom: 3mm;
-      line-height: 1.4;
+      margin-bottom: 4mm;
+      line-height: 1.5;
     }
 
-    /* ---- Details ---- */
+    /* ---- Details / impartido line ---- */
     .details-text {
       font-family: var(--font-body);
       font-size: 12px;
-      color: var(--muted);
+      color: var(--ink);
       margin-bottom: 4mm;
       line-height: 1.4;
     }
@@ -120,31 +120,35 @@
     .hours-line {
       font-family: var(--font-body);
       font-size: 12px;
-      color: var(--muted);
-      margin-bottom: auto;
+      color: var(--ink);
+      margin-bottom: 0;
     }
 
-    /* ---- Footer area ---- */
+    /* Spacer pushes footer to bottom */
+    .spacer { flex: 1; }
+
+    /* ---- Footer area — pinned to bottom ---- */
     .footer {
       display: flex;
       flex-direction: row;
       align-items: flex-end;
       justify-content: space-between;
-      margin-top: 6mm;
+      margin-top: 0;
     }
 
     .footer-left {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
     }
 
+    /* Italic motto line in quotes */
     .motto {
       font-family: var(--font-body);
       font-size: 11px;
       font-style: italic;
       color: var(--muted);
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
 
     .location-date {
@@ -161,10 +165,10 @@
       width: 60mm;
       height: 1px;
       background: var(--ink);
-      margin: 0 auto 6px;
+      margin: 0 auto 5px;
     }
-    .sig-name { font-family: var(--font-heading); font-size: 13px; font-weight: 600; }
-    .sig-title { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+    .sig-name { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--ink); }
+    .sig-title { font-size: 9px; letter-spacing: .10em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -181,33 +185,35 @@
         {{#if brand.logoUrl}}<img class="logo" src="{{brand.logoUrl}}" alt="{{brand.name}}">{{/if}}
       </div>
 
-      <!-- Preamble: brand.name otorga la presente -->
+      <!-- Preamble: "Universidad Acme otorga la presente" -->
       <div class="preamble">{{#if brand.name}}{{brand.name}}{{/if}}{{#if preamble}} {{preamble}}{{/if}}</div>
 
-      <!-- Title -->
+      <!-- Title: "Constancia" — sans, medium -->
       <div class="cert-title">{{title}}</div>
 
-      <!-- Recipient name (very large, bold) -->
+      <!-- Recipient block: small "A:" label, then large bold name -->
       <div class="recipient-wrap">
         <div class="recipient-prefix">A:</div>
         <div class="recipient-name">{{recipientName}}</div>
       </div>
 
-      <!-- Body -->
+      <!-- Body: "Por su participación..." -->
       {{#if body}}<div class="body-text">{{body}}</div>{{/if}}
 
-      <!-- Details -->
+      <!-- Details: "Impartido por esta Universidad..." -->
       {{#if details}}<div class="details-text">{{details}}</div>{{/if}}
 
       <!-- Valor curricular hours -->
       {{#if meta.hours}}<div class="hours-line">Valor curricular: {{meta.hours}} horas</div>{{/if}}
 
+      <div class="spacer"></div>
+
       <!-- Footer: motto + location/date bottom-left, signature bottom-right -->
       <div class="footer">
 
         <div class="footer-left">
-          {{#if motto}}<div class="motto">{{motto}}</div>{{/if}}
-          <div class="location-date">{{#if meta.location}}{{meta.location}}{{/if}}{{#if meta.date}} &nbsp;{{meta.date}}{{/if}}</div>
+          {{#if motto}}<div class="motto">"{{motto}}"</div>{{/if}}
+          <div class="location-date">{{#if meta.location}}{{meta.location}}{{/if}}{{#if meta.date}}&nbsp; {{meta.date}}{{/if}}</div>
         </div>
 
         <!-- Signature (right) -->

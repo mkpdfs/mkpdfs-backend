@@ -327,7 +327,8 @@ export const templates: Omit<MarketplaceTemplate, 's3Key' | 'thumbnailKey' | 'cr
       preamble: 'otorga la presente',
       recipientName: 'Victor Manuel Coutiño Silva',
       body: 'Por su participación en el Curso Virtual de: Bootcamps de programación',
-      details: 'Impartido por esta Universidad del 15 de mayo de 2025 al 15 de julio de 2025.',
+      details: 'Impartido por esta Universidad el 15 de mayo de 2025 al 15 de julio de 2025',
+      motto: 'La cultura al servicio del Pueblo',
       meta: { hours: '40', date: 'Agosto 2024', location: 'Puebla, Pue.' },
       signatures: [
         { name: 'Ing. Cesar Orozco Gamiño', title: 'Director Académico de Ingenierías', imageUrl: '' }
