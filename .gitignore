@@ -1,3 +1,6 @@
+# Worktrees (isolated task workspaces)
+.worktrees/
+
 # Dependencies
 node_modules/
 layers/puppeteer/node_modules/
