@@ -39,21 +39,27 @@ surface, not a new product surface with its own rules.
 
 One new Lambda, `POST /v1/mcp`, wired into the existing `ApiStack` (no new stack — it's one
 function, same lifecycle as the other `/v1/*` routes). Uses `@modelcontextprotocol/sdk`
-(new dependency) with `StreamableHTTPServerTransport` in **stateless mode**
+(new dependency, confirmed on npm at `1.29.0`) with `WebStandardStreamableHTTPServerTransport`
+(`@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js`) in **stateless mode**
 (`sessionIdGenerator: undefined`, `enableJsonResponse: true`): every Lambda invocation is one
 self-contained JSON-RPC request in, one JSON-RPC response out — no server-initiated push, no
 SSE stream held open across invocations, which matches how Lambda actually runs (no shared
 memory between invocations to anchor a long-lived MCP session against).
 
-**Known technical risk, flagged for the implementation plan:** the SDK's transport class is
-built around Node's `http.IncomingMessage`/`ServerResponse`, which API Gateway's Lambda proxy
-integration does not hand you (you get an `APIGatewayProxyEvent` in, must return an
-`APIGatewayProxyResult`). This needs a small compatibility shim (mock req/res objects backed
-by the event body / a captured response buffer) — a pattern AWS's own MCP-on-Lambda samples
-document. If the shim proves brittle, the fallback is to skip the transport class entirely and
-hand-roll the JSON-RPC dispatch (parse `{method, params, id}`, route `tools/list` and
-`tools/call` ourselves, still using the SDK's `McpServer` only for tool
-registration/schema-validation) — more code, zero dependency on the http-shim working.
+**Verified against the real SDK (not guessed):** the "Web Standard" transport variant operates
+purely on Fetch API `Request`/`Response` objects (`handleRequest(req: Request): Promise<Response>`),
+which Node 20 (the Lambda runtime already in use) provides as globals — no
+`http.IncomingMessage`/`ServerResponse` shim needed at all, which resolves what an earlier draft
+of this spec flagged as the main technical risk. Confirmed by a local probe (installed the real
+package, wired `McpServer` + this transport, sent live `initialize`/`tools/list`/`tools/call`
+JSON-RPC requests through it): a **fresh `McpServer` + fresh transport instance must be created
+per invocation** ("Stateless transport cannot be reused across requests" is a thrown error
+otherwise) — but a brand-new transport handles `tools/list`/`tools/call` correctly without a
+prior `initialize` having been sent to that same instance, so "one Lambda invocation = one new
+server+transport pair, handles exactly one request" is sufficient; no session bootstrapping
+across invocations is required. Zod-schema validation errors on tool args are handled by the
+SDK automatically (surfaced as `isError: true` results), not something this project's code needs
+to implement.
 
 ### Auth
 
