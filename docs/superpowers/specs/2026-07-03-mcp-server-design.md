@@ -148,9 +148,12 @@ The wrapped handler's `APIGatewayProxyResult.statusCode` drives the MCP result:
 3. **CDK wiring** in `api-stack.ts`: one `makeFn('McpFn', { entry: 'src/functions/mcp/handler.ts',
    timeoutSeconds: 30, memorySize: 4096, layers: [chromiumLayer] })` + the combined grants
    listed above + `addRoute('/v1/mcp', 'POST', mcpFn, false)`.
-4. **Monitoring stack gotcha (per root `CLAUDE.md`):** pre-create the `/aws/lambda/McpFn-{env}`
-   log group before the Monitoring stack's metric filters reference it, or that stack rolls
-   back on first deploy (bit them on the first prod deploy already — documented gotcha).
+4. **Monitoring stack does not need changes.** Checked `monitoring-stack.ts`: its log-based
+   metric filters key off an explicit `billingFns` props object (`stripeWebhook`, `generatePdf`,
+   `generatePdfApiKey`, `processJob`) rather than scanning every Lambda, and `McpFn` isn't part
+   of that set. The root `CLAUDE.md` "pre-create the log group" gotcha only bites a function
+   that IS added to that set before its first invocation — doesn't apply here since this spec
+   doesn't add `McpFn` billing/error alarms (out of scope, see below).
 
 ## Security
 
@@ -173,15 +176,20 @@ The wrapped handler's `APIGatewayProxyResult.statusCode` drives the MCP result:
 
 ## Testing
 
-- **Backend** (no handler unit tests exist for the `*ApiKey` handlers today, per the prior
-  spec's precedent): validate against dev with the **MCP Inspector CLI** (`npx
-  @modelcontextprotocol/inspector`) pointed at `dev.apis.mkpdfs.com/v1/mcp` with a real dev
-  `tlfy_` key — `tools/list`, then each of the 6 tools once (including a deliberate bad
-  `templateId` to confirm the 404 maps to `isError: true`, and — if feasible — draining a test
-  account's credits to confirm the 402 path).
-- Confirm the auth guard: missing key → error result; `Authorization: Bearer <jwt>` alone (no
-  `x-api-key`) → error result (same forged-JWT rejection as REST).
-- Pre-create the `McpFn` log group (see Backend components #4) before first deploy.
+- **Unit tests for the new adapter code** (unlike the `*ApiKey` handlers, this is new glue code
+  worth covering directly): the event↔Request/Response mapping, the synthetic-event dispatch +
+  status→`CallToolResult` mapping, and tool registration (all 6 tools reachable via a real
+  `McpServer` + `WebStandardStreamableHTTPServerTransport` pair, with only the wrapped
+  `*ApiKey` handlers mocked so no AWS calls are made). The wrapped handlers themselves stay
+  unverified by unit tests, same as today (no regression — REST already only has manual
+  coverage there).
+- **Manual smoke against dev**: **MCP Inspector CLI** (`npx @modelcontextprotocol/inspector`)
+  pointed at `dev.apis.mkpdfs.com/v1/mcp` with a real dev `tlfy_` key — `tools/list`, then each
+  of the 6 tools once (including a deliberate bad `templateId` to confirm the 404 maps to
+  `isError: true`, and — if feasible — draining a test account's credits to confirm the 402
+  path). Also confirm the auth guard: missing key → 401 before an `McpServer` is even built;
+  `Authorization: Bearer <jwt>` alone (no `x-api-key`) → same 401 (no forged-JWT path here,
+  since the top-level key check never looks at `Authorization`).
 
 ## Rollout
 
