@@ -45,7 +45,18 @@ export const validateApiToken = async (apiToken: string): Promise<string | null>
       Key: { token: hashedToken }
     }));
 
-    if (tokenData.Item && tokenData.Item.active && (!tokenData.Item.expiresAt || tokenData.Item.expiresAt > Date.now())) {
+    // expiresAt is stored as an ISO string (createToken). The old comparison
+    // `iso > Date.now()` coerced the string to NaN, so EVERY token with an
+    // expiration failed validation from the moment it was created (backlog
+    // bug, worse than documented). Parse to epoch; unparseable → fail closed.
+    const expiresAtMs =
+      tokenData.Item?.expiresAt == null
+        ? null
+        : typeof tokenData.Item.expiresAt === 'number'
+          ? tokenData.Item.expiresAt
+          : Date.parse(tokenData.Item.expiresAt);
+
+    if (tokenData.Item && tokenData.Item.active && (expiresAtMs === null || expiresAtMs > Date.now())) {
       // Refresh last-used at most once per LAST_USED_REFRESH_MS
       const lastUsedAt = tokenData.Item.lastUsed ? Date.parse(tokenData.Item.lastUsed) : 0;
       if (!lastUsedAt || Date.now() - lastUsedAt > LAST_USED_REFRESH_MS) {
