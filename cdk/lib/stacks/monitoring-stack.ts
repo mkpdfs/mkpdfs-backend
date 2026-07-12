@@ -252,6 +252,82 @@ export class MonitoringStack extends cdk.Stack {
     }
 
     // ----------------------------------------------------------------
+    // CloudWatch RUM — real-user monitoring for mkpdfs-web
+    // ----------------------------------------------------------------
+    // The browser client (aws-rum-web) signs PutRumEvents as a GUEST of a
+    // dedicated identity pool — deliberately separate from the app's auth
+    // pool so telemetry credentials never mix with dashboard sessions.
+    // aws-rum-web does NOT capture console.* on its own: JS errors/http/
+    // vitals come from its telemetries, and the frontend rum-logger forwards
+    // structured [Area] logs as custom events (hence customEvents ENABLED).
+    const appMonitorName = `mkpdfs-web-${env}`;
+
+    const rumIdentityPool = new cognito.CfnIdentityPool(this, 'RumIdentityPool', {
+      identityPoolName: `mkpdfs-rum-${env}`,
+      allowUnauthenticatedIdentities: true,
+    });
+
+    const rumGuestRole = new iam.Role(this, 'RumGuestRole', {
+      roleName: `mkpdfs-rum-guest-${env}`,
+      assumedBy: new iam.FederatedPrincipal(
+        'cognito-identity.amazonaws.com',
+        {
+          StringEquals: { 'cognito-identity.amazonaws.com:aud': rumIdentityPool.ref },
+          'ForAnyValue:StringLike': { 'cognito-identity.amazonaws.com:amr': 'unauthenticated' },
+        },
+        'sts:AssumeRoleWithWebIdentity',
+      ),
+    });
+    rumGuestRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['rum:PutRumEvents'],
+        resources: [`arn:aws:rum:${this.region}:${this.account}:appmonitor/${appMonitorName}`],
+      }),
+    );
+
+    new cognito.CfnIdentityPoolRoleAttachment(this, 'RumIdentityPoolRoles', {
+      identityPoolId: rumIdentityPool.ref,
+      roles: { unauthenticated: rumGuestRole.roleArn },
+    });
+
+    const appMonitor = new rum.CfnAppMonitor(this, 'WebAppMonitor', {
+      name: appMonitorName,
+      // RUM rejects events from origins outside this list. www is a real
+      // Amplify subdomain (www prefix → main branch), so prod needs both.
+      domainList: cfg.isProd
+        ? ['mkpdfs.com', 'www.mkpdfs.com']
+        : ['dev.mkpdfs.com', 'localhost'],
+      cwLogEnabled: true, // also lands in CW Logs → queryable with Logs Insights
+      customEvents: { status: 'ENABLED' },
+      appMonitorConfiguration: {
+        identityPoolId: rumIdentityPool.ref,
+        guestRoleArn: rumGuestRole.roleArn,
+        allowCookies: true,
+        enableXRay: false,
+        sessionSampleRate: 1,
+        telemetries: ['errors', 'performance', 'http'],
+      },
+    });
+
+    // The identity pool is public by design (guest PutRumEvents), so ingest
+    // volume is the abuse surface: someone scripting the guest role can only
+    // spam events, and this catches it. ~10 MB/h is far above organic traffic.
+    alarm('RumIngestSpike', {
+      alarmName: `mkpdfs-rum-ingest-spike-${env}`,
+      alarmDescription:
+        'CloudWatch RUM ingest volume spike — possible telemetry abuse via the public guest identity pool',
+      metric: new cloudwatch.Metric({
+        namespace: 'AWS/RUM',
+        metricName: 'RumEventPayloadSize',
+        dimensionsMap: { application_name: appMonitorName },
+        period: cdk.Duration.hours(1),
+        statistic: 'Sum',
+      }),
+      threshold: 10_000_000,
+      evaluationPeriods: 1,
+    });
+
+    // ----------------------------------------------------------------
     // Dashboard
     // ----------------------------------------------------------------
     this.dashboard = new cloudwatch.Dashboard(this, 'Dashboard', {
@@ -363,61 +439,6 @@ export class MonitoringStack extends cdk.Stack {
         height: 4,
       }),
     );
-
-    // ----------------------------------------------------------------
-    // CloudWatch RUM — real-user monitoring for mkpdfs-web
-    // ----------------------------------------------------------------
-    // The browser client (aws-rum-web) signs PutRumEvents as a GUEST of a
-    // dedicated identity pool — deliberately separate from the app's auth
-    // pool so telemetry credentials never mix with dashboard sessions.
-    // aws-rum-web does NOT capture console.* on its own: JS errors/http/
-    // vitals come from its telemetries, and the frontend rum-logger forwards
-    // structured [Area] logs as custom events (hence customEvents ENABLED).
-    const appMonitorName = `mkpdfs-web-${env}`;
-
-    const rumIdentityPool = new cognito.CfnIdentityPool(this, 'RumIdentityPool', {
-      identityPoolName: `mkpdfs-rum-${env}`,
-      allowUnauthenticatedIdentities: true,
-    });
-
-    const rumGuestRole = new iam.Role(this, 'RumGuestRole', {
-      roleName: `mkpdfs-rum-guest-${env}`,
-      assumedBy: new iam.FederatedPrincipal(
-        'cognito-identity.amazonaws.com',
-        {
-          StringEquals: { 'cognito-identity.amazonaws.com:aud': rumIdentityPool.ref },
-          'ForAnyValue:StringLike': { 'cognito-identity.amazonaws.com:amr': 'unauthenticated' },
-        },
-        'sts:AssumeRoleWithWebIdentity',
-      ),
-    });
-    rumGuestRole.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ['rum:PutRumEvents'],
-        resources: [`arn:aws:rum:${this.region}:${this.account}:appmonitor/${appMonitorName}`],
-      }),
-    );
-
-    new cognito.CfnIdentityPoolRoleAttachment(this, 'RumIdentityPoolRoles', {
-      identityPoolId: rumIdentityPool.ref,
-      roles: { unauthenticated: rumGuestRole.roleArn },
-    });
-
-    const appMonitor = new rum.CfnAppMonitor(this, 'WebAppMonitor', {
-      name: appMonitorName,
-      // RUM rejects events from origins outside this list.
-      domainList: cfg.isProd ? ['mkpdfs.com'] : ['dev.mkpdfs.com', 'localhost'],
-      cwLogEnabled: true, // also lands in CW Logs → queryable with Logs Insights
-      customEvents: { status: 'ENABLED' },
-      appMonitorConfiguration: {
-        identityPoolId: rumIdentityPool.ref,
-        guestRoleArn: rumGuestRole.roleArn,
-        allowCookies: true,
-        enableXRay: false,
-        sessionSampleRate: 1,
-        telemetries: ['errors', 'performance', 'http'],
-      },
-    });
 
     // ----------------------------------------------------------------
     // Outputs
