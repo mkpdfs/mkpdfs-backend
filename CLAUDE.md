@@ -62,6 +62,26 @@ gets `grantDualAuth` (TOKENS_TABLE RW for `lastUsed`) PLUS its JWT sibling's gra
 `mkp templates … --api-key`. Token mint/revoke stays JWT-only (no privilege escalation); token
 scopes deferred.
 
+#### MCP server — `POST /v1/mcp` (API-key only, added 2026-07-03)
+
+Exposes `generate_pdf` + template CRUD (`list_templates`, `get_template`, `upload_template`,
+`update_template`, `delete_template`) as [MCP](https://modelcontextprotocol.io) tools, so
+external services/agents can drive mkpdfs the same way the CLI does headlessly. Same posture
+as `/v1/pdf/generate` and `/v1/templates/*`: no Gateway authorizer, `x-api-key: tlfy_*` only.
+
+Each tool call builds a synthetic `APIGatewayProxyEvent` and invokes the matching `*ApiKey`
+handler's exported `main` **in-process** (`src/functions/mcp/tools.ts` +
+`invokeApiKeyHandler.ts`) — no network hop, and auth/credits/subscription/usage-tracking stay
+guaranteed-identical to REST because it's literally the same code running. `generate_pdf` is
+synchronous only (no `async`/`sendEmail`).
+
+Transport: `@modelcontextprotocol/sdk`'s `WebStandardStreamableHTTPServerTransport`
+(`server/webStandardStreamableHttp.js` — pure Fetch API `Request`/`Response`, no Node `http`
+shim), stateless (`sessionIdGenerator: undefined`) — a fresh `McpServer` + transport pair is
+built **per Lambda invocation** (the SDK throws if a stateless transport is reused across
+requests). `McpFn` shares `GeneratePdfApiKeyFn`'s footprint (Chromium layer, 4096 MB, 30s
+timeout) since `generate_pdf` can take the same render path.
+
 #### PDF Generation (Dual auth)
 - `generatePdf`: Sync PDF generation endpoint
 - `generatePdfAsync`: Legacy async processor (deprecated)

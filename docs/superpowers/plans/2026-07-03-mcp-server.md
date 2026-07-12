@@ -614,7 +614,11 @@ import { main } from './handler';
 const baseEvent = (overrides: any = {}) => ({
   httpMethod: 'POST',
   path: '/v1/mcp',
-  headers: { 'content-type': 'application/json', 'x-api-key': 'tlfy_test' },
+  headers: {
+    'content-type': 'application/json',
+    accept: 'application/json, text/event-stream',
+    'x-api-key': 'tlfy_test',
+  },
   multiValueHeaders: {},
   queryStringParameters: null,
   multiValueQueryStringParameters: null,
@@ -838,10 +842,17 @@ export MKPDFS_DEV_API_KEY="tlfy_..."
 ```bash
 curl -s -X POST "https://dev.apis.mkpdfs.com/v1/mcp" \
   -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
   -H "x-api-key: $MKPDFS_DEV_API_KEY" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 Expected: JSON body with `result.tools` containing exactly 6 entries: `generate_pdf`, `list_templates`, `get_template`, `upload_template`, `update_template`, `delete_template`.
+
+Note: the `accept: application/json, text/event-stream` header is **required** — the MCP
+Streamable HTTP transport rejects requests without it (406). Real MCP clients always send it;
+this was caught during Task 5 (its test fixture initially omitted it too — fixed there and here
+for consistency). The Step 4 401 check below does NOT need it: that guard runs before the
+transport is ever built.
 
 If instead you get `{"message":"Missing Authentication Token"}`, the API Gateway stage may still be serving a stale deployment snapshot (a documented gotcha in root `CLAUDE.md`) — run:
 ```bash
@@ -863,6 +874,7 @@ Expected: `401`
 ```bash
 curl -s -X POST "https://dev.apis.mkpdfs.com/v1/mcp" \
   -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
   -H "x-api-key: $MKPDFS_DEV_API_KEY" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_templates","arguments":{}}}'
 ```

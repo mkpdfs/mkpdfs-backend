@@ -390,6 +390,36 @@ export class ApiStack extends cdk.Stack {
     addRoute('/v1/pdf/generate', 'POST', generatePdfApiKey, false);
 
     // =================================================================
+    // MCP (API-key only) — thin adapter over the /v1/* routes above.
+    // Can execute generatePdfApiKey's full render path plus all 5 template
+    // *ApiKey handlers in-process (see src/functions/mcp/tools.ts), so it
+    // needs their combined footprint: Chromium layer + the union of grants.
+    // =================================================================
+    const mcpFn = makeFn('McpFn', {
+      entry: 'src/functions/mcp/handler.ts',
+      timeoutSeconds: 30,
+      memorySize: 4096,
+      layers: [chromiumLayer],
+    });
+    grantDualAuth(mcpFn);
+    grantSubscriptionMw(mcpFn);
+    grantUsageTracking(mcpFn);
+    bucket.grantRead(mcpFn);
+    bucket.grantPut(mcpFn);
+    bucket.grantDelete(mcpFn);
+    tables.templates.grantReadWriteData(mcpFn);
+    tables.marketplace.grantReadData(mcpFn);
+    grantSes(mcpFn);
+    tables.creditLedger.grantWriteData(mcpFn); // debit ledger entries (generate_pdf)
+    grantSsmParams(mcpFn, env); // stripe-secret-key for auto-recharge
+    mcpFn.addEnvironment(
+      'GENERATE_PDF_ASYNC_FUNCTION_NAME',
+      generatePdfAsync.functionName,
+    );
+    generatePdfAsync.grantInvoke(mcpFn);
+    addRoute('/v1/mcp', 'POST', mcpFn, false);
+
+    // =================================================================
     // JOBS (async PDF generation)
     // =================================================================
     const submitJob = makeFn('SubmitJobFn', {

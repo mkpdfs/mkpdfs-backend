@@ -61,11 +61,13 @@
     "@middy/core": "^6.3.2",
     "@middy/http-error-handler": "^6.3.2",
     "@middy/http-json-body-parser": "^6.3.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "handlebars": "^4.7.8",
     "jsonwebtoken": "^9.0.3",
     "qrcode-generator": "^1.5.2",
     "stripe": "^20.1.0",
     "twilio": "^5.11.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^4.4.3"
   }
 }
