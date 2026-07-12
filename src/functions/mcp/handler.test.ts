@@ -50,7 +50,7 @@ describe('mcp handler.main', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('lists all 6 tools for a valid api key', async () => {
+  it('lists all 7 tools for a valid api key', async () => {
     const res = await main(baseEvent() as any, {} as any);
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
@@ -58,6 +58,7 @@ describe('mcp handler.main', () => {
     expect(names).toEqual([
       'delete_template',
       'generate_pdf',
+      'get_authoring_guide',
       'get_template',
       'list_templates',
       'update_template',

@@ -46,17 +46,31 @@ beforeEach(() => {
 });
 
 describe('registerTools', () => {
-  it('registers exactly the 6 v1 tools', async () => {
+  it('registers exactly the 7 v1 tools', async () => {
     const { json } = await callViaFreshServer({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
     const names = json.result.tools.map((t: any) => t.name).sort();
     expect(names).toEqual([
       'delete_template',
       'generate_pdf',
+      'get_authoring_guide',
       'get_template',
       'list_templates',
       'update_template',
       'upload_template',
     ]);
+  });
+
+  it('get_authoring_guide returns the embedded guide without touching any handler', async () => {
+    const { json } = await callViaFreshServer({
+      jsonrpc: '2.0',
+      id: 9,
+      method: 'tools/call',
+      params: { name: 'get_authoring_guide', arguments: {} },
+    });
+    expect(json.result.isError).toBeFalsy();
+    expect(json.result.content[0].text).toContain('@page');
+    expect(json.result.content[0].text).toContain('mkpdfsQR');
+    expect(json.result.content[0].text).toContain('{{#each');
   });
 
   it('generate_pdf calls the wrapped handler with templateId/data and the api key', async () => {

@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
+import { SERVER_INSTRUCTIONS } from './authoringGuide';
 import { registerTools } from './tools';
 import { buildWebRequest, toApiGatewayResult } from './webRequest';
 
@@ -23,7 +24,14 @@ export const main = async (
     return unauthorized();
   }
 
-  const server = new McpServer({ name: 'mkpdfs', version: '1.0.0' });
+  const server = new McpServer(
+    { name: 'mkpdfs', version: '1.0.0' },
+    // Surfaced to the client on initialize — teaches agents the template
+    // format up front so they don't flounder (real failure mode: an agent
+    // connected, saw CRUD tools, and concluded templates "can't be
+    // parameterized"). Full walkthrough: get_authoring_guide.
+    { instructions: SERVER_INSTRUCTIONS },
+  );
   registerTools(server, apiKey);
 
   const transport = new WebStandardStreamableHTTPServerTransport({
