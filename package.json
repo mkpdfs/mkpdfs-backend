@@ -38,7 +38,7 @@
     "aws-sdk-client-mock": "^4.1.0",
     "constructs": "^10.6.0",
     "esbuild": "^0.25.5",
-    "puppeteer-core": "^24.11.1",
+    "puppeteer-core": "24.35.0",
     "serverless": "^3.40.0",
     "serverless-domain-manager": "^8.0.0",
     "serverless-esbuild": "^1.55.1",
