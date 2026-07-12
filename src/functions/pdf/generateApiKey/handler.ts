@@ -19,7 +19,8 @@ import { generatePdf } from '../generate/handler';
  */
 export const main = middyfy(generatePdf)
   .use(apiKeyOnlyMiddleware())
-  .use(subscriptionMiddleware())
+  // readUsage: false — usage is stats-only, never gates PDFs (perf review P0)
+  .use(subscriptionMiddleware({ readUsage: false }))
   .use(checkCreditsMiddleware())
   .use(usageTrackingMiddleware({ actionType: 'pdf_generation' }))
   .use(debitCreditsMiddleware());

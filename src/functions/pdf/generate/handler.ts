@@ -4,6 +4,7 @@ import { dualAuthMiddleware } from '@libs/middleware/dualAuth';
 import { subscriptionMiddleware } from '@libs/middleware/subscription';
 import { usageTrackingMiddleware } from '@libs/middleware/usageTracking';
 import { checkCreditsMiddleware, debitCreditsMiddleware } from '@libs/middleware/credits';
+import { perfOf } from '@libs/perf';
 import { PdfService } from '@libs/services/pdfService';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
@@ -88,7 +89,7 @@ export const generatePdf: ValidatedEventAPIGatewayProxyEvent<GeneratePdfRequest>
         templateId,
         data,
         sendEmail
-      });
+      }, perfOf(event));
 
       return formatJSONResponse({
         success: true,
@@ -105,7 +106,9 @@ export const generatePdf: ValidatedEventAPIGatewayProxyEvent<GeneratePdfRequest>
 
 export const main = middyfy(generatePdf)
   .use(dualAuthMiddleware())
-  .use(subscriptionMiddleware())
+  // readUsage: false — monthly usage is stats-only and never gates PDFs;
+  // skipping the read removes a DynamoDB round-trip from every render.
+  .use(subscriptionMiddleware({ readUsage: false }))
   .use(checkCreditsMiddleware())
   .use(usageTrackingMiddleware({ actionType: 'pdf_generation' }))
   .use(debitCreditsMiddleware());

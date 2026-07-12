@@ -61,8 +61,11 @@ export function createServiceFunction(
     depsLockFilePath: path.join(REPO_ROOT, 'package-lock.json'),
     bundling: {
       forceDockerBundling: false, // local esbuild (devDependency)
-      minify: false,
-      sourceMap: true,
+      // Minified, no shipped sourcemaps: smaller ZIPs parse faster at cold
+      // start (perf review 2026-07-11, P1). Tradeoff: minified stack traces —
+      // acceptable; errors are diagnosed via handler log lines, not frames.
+      minify: true,
+      sourceMap: false,
       target: 'node20',
       // Same exclusion list as serverless-esbuild ('aws-sdk' v2 is unused;
       // @aws-sdk v3 stays BUNDLED for parity with the live builds).
@@ -111,7 +114,9 @@ export function buildCommonEnv(
   const params = ssmParamNames(env);
   const common: Record<string, string> = {
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
-    NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+    // No --enable-source-maps: maps are no longer shipped (see bundling), and
+    // the flag makes V8 pay a translation cost on every stack capture.
+    NODE_OPTIONS: '--stack-trace-limit=1000',
     STAGE: env,
     REGION,
     SERVICE_NAME,

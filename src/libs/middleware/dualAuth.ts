@@ -2,6 +2,12 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { createHash } from 'crypto';
 import { decode } from 'jsonwebtoken';
+import { PerfTrace } from '../perf';
+
+// `lastUsed` is display metadata (dashboard "last used" column), not an audit
+// trail — refreshing it at most once per hour drops one DynamoDB write from
+// every API-key request (perf review 2026-07-11, P1).
+const LAST_USED_REFRESH_MS = 60 * 60 * 1000;
 
 interface JwtPayload {
   sub?: string;
@@ -40,15 +46,18 @@ export const validateApiToken = async (apiToken: string): Promise<string | null>
     }));
 
     if (tokenData.Item && tokenData.Item.active && (!tokenData.Item.expiresAt || tokenData.Item.expiresAt > Date.now())) {
-      // Update last used timestamp
-      await docClient.send(new UpdateCommand({
-        TableName: process.env.TOKENS_TABLE!,
-        Key: { token: hashedToken },
-        UpdateExpression: 'SET lastUsed = :now',
-        ExpressionAttributeValues: {
-          ':now': new Date().toISOString()
-        }
-      }));
+      // Refresh last-used at most once per LAST_USED_REFRESH_MS
+      const lastUsedAt = tokenData.Item.lastUsed ? Date.parse(tokenData.Item.lastUsed) : 0;
+      if (!lastUsedAt || Date.now() - lastUsedAt > LAST_USED_REFRESH_MS) {
+        await docClient.send(new UpdateCommand({
+          TableName: process.env.TOKENS_TABLE!,
+          Key: { token: hashedToken },
+          UpdateExpression: 'SET lastUsed = :now',
+          ExpressionAttributeValues: {
+            ':now': new Date().toISOString()
+          }
+        }));
+      }
 
       return tokenData.Item.userId;
     }
@@ -73,6 +82,7 @@ const unauthorizedResponse = (message: string) => ({
 export const dualAuthMiddleware = (options: DualAuthOptions = { requireAuth: true, allowApiToken: true }) => {
   return {
     before: async (handler: any): Promise<any> => {
+      handler.event.__perf = new PerfTrace();
       let userId: string | undefined;
       let userEmail: string | undefined;
 
@@ -134,6 +144,7 @@ export const dualAuthMiddleware = (options: DualAuthOptions = { requireAuth: tru
       if (userEmail) {
         handler.event.userEmail = userEmail;
       }
+      handler.event.__perf.mark('auth');
     }
   };
 };
@@ -161,6 +172,7 @@ export const iamOnlyMiddleware = () => {
 export const apiKeyOnlyMiddleware = () => {
   return {
     before: async (handler: any): Promise<any> => {
+      handler.event.__perf = new PerfTrace();
       const apiToken = handler.event.headers?.['x-api-key'] || handler.event.headers?.['X-Api-Key'];
 
       if (!apiToken) {
@@ -180,6 +192,7 @@ export const apiKeyOnlyMiddleware = () => {
 
       // Same contract as dualAuthMiddleware: downstream middlewares read event.userId
       handler.event.userId = userId;
+      handler.event.__perf.mark('auth');
     }
   };
 };

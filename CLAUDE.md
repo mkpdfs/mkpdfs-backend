@@ -157,6 +157,13 @@ What's done:
 - **`--font-render-hinting=none`** appended to the Chromium launch args.
 - **Lambda memory 4096 MB** for `GeneratePdfFn` / `GeneratePdfApiKeyFn` / `ProcessJobFn` (Chromium render is CPU-bound; CPU scales with memory).
 
+2026-07-11 perf-review pass (docs/pdf-generation-performance-review-2026-07-11.md; free items executed):
+- **Per-stage instrumentation**: every sync PDF request emits ONE `[perf]` JSON log line (stages: auth/subscription/creditGate/templateRow/templateCompile/theme/browser/setContent/fontWait + composeMs/pdfPrintMs/s3Upload/presign/email/debit; flags: coldStart, browserReused, templateCacheHit, logoCacheHit; plus status/path/pageCount). Emitted from `debitCreditsMiddleware.after` (last billing step), trace threaded via `event.__perf` (`src/libs/perf.ts`). Query with Logs Insights filtering `[perf]` — separate cold/warm percentiles BEFORE buying provisioned concurrency.
+- **Usage read removed from PDF routes**: `subscriptionMiddleware({ readUsage: false })` on generate/generateApiKey (usage is stats-only; consumers that need `event.currentUsage` — aiLimits, getProfile — keep the default).
+- **`lastUsed` write throttled**: API-token activity refreshes at most once/hour (display metadata, not audit) — one DDB write less per api-key request.
+- **Bundles minified, no shipped sourcemaps** (+ dropped `--enable-source-maps`): smaller ZIPs, faster cold start. Tradeoff: minified stack traces.
+- Deferred from the review: Puppeteer 24.x bump to the Chrome-143 range (needs its own visual-regression pass), lazy per-fontKey font loading, Lambda power tuning (use the new `[perf]` data), async usage bookkeeping.
+
 Possible improvements (deferred — discuss at scale):
 - **Output cache**: hash `userId+templateId+contentVersion+data+theme+logoKey+today` → reuse the S3 PDF on a cache hit (skip render). Only helps repeat traffic; net-cheaper than rendering. Include `today` because system params (`{{today/now/year}}`) make output date-dependent.
 - **Cold start**: provisioned concurrency / SnapStart, smaller bundle (`minify`, drop source maps, dynamic-import Stripe). Deferred until there's traffic.

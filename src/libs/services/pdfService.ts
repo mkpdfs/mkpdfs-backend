@@ -12,6 +12,7 @@ import { buildThemeHead } from '../theme/buildThemeStyle';
 import { FONT_FACE_CSS, DEFAULT_FONT_FACE_CSS } from '../theme/generated/fontFaces';
 import { injectIntoHead } from '../theme/injectTheme';
 import { buildSystemParams, SystemParams } from '../systemParams';
+import { PerfTrace } from '../perf';
 import qrcode from 'qrcode-generator';
 
 const s3Client = new S3Client({});
@@ -127,30 +128,38 @@ export class PdfService {
     // but kept for backwards compatibility.
   }
 
-  async generatePdf(options: GeneratePdfOptions): Promise<PdfResult> {
+  async generatePdf(options: GeneratePdfOptions, perf?: PerfTrace): Promise<PdfResult> {
     const { userId, templateId, data, sendEmail } = options;
 
     // Read the template row (theme + content version) — falls through to
     // S3-only behaviour if the row is missing (legacy/direct uploads).
-    const row = await this.getTemplateRow(userId, templateId);
+    const row = perf
+      ? await perf.span('templateRow', () => this.getTemplateRow(userId, templateId))
+      : await this.getTemplateRow(userId, templateId);
     const contentVersion = row?.contentVersion || row?.updatedAt || 'v0';
 
-    const [compiledTemplate, resolvedTheme] = await Promise.all([
-      this.getCompiledTemplate(userId, templateId, contentVersion),
-      this.resolveTheme(row?.theme as Theme | undefined),
-    ]);
+    const compileP = perf
+      ? perf.span('templateCompile', () =>
+          this.getCompiledTemplate(userId, templateId, contentVersion, perf))
+      : this.getCompiledTemplate(userId, templateId, contentVersion);
+    const themeP = perf
+      ? perf.span('theme', () => this.resolveTheme(row?.theme as Theme | undefined, perf))
+      : this.resolveTheme(row?.theme as Theme | undefined);
+    const [compiledTemplate, resolvedTheme] = await Promise.all([compileP, themeP]);
     const systemParams = buildSystemParams(new Date());
 
+    const composeStart = Date.now();
     const html = PdfService.composeHtml(compiledTemplate, data, resolvedTheme, systemParams);
+    perf?.flag('composeMs', Date.now() - composeStart);
 
     // Generate PDF
-    const pdfBuffer = await this.generatePdfFromHtml(html);
+    const pdfBuffer = await this.generatePdfFromHtml(html, perf);
 
     // Upload to S3
     const pdfId = uuidv4();
     const pdfKey = `${userId}/pdfs/${pdfId}.pdf`;
 
-    await s3Client.send(new PutObjectCommand({
+    const uploadP = () => s3Client.send(new PutObjectCommand({
       Bucket: process.env.ASSETS_BUCKET!,
       Key: pdfKey,
       Body: pdfBuffer,
@@ -161,21 +170,24 @@ export class PdfService {
         generatedAt: new Date().toISOString()
       }
     }));
+    await (perf ? perf.span('s3Upload', uploadP) : uploadP());
 
     // Generate pre-signed URL (5 days expiry)
-    const url = await getSignedUrl(s3Client, new GetObjectCommand({
+    const presignP = () => getSignedUrl(s3Client, new GetObjectCommand({
       Bucket: process.env.ASSETS_BUCKET!,
       Key: pdfKey
     }), { expiresIn: 5 * 24 * 60 * 60 }); // 5 days
+    const url = await (perf ? perf.span('presign', presignP) : presignP());
 
     // Send email if requested
     if (sendEmail && sendEmail.length > 0) {
-      await sesService.sendPdfEmail({
+      const emailP = () => sesService.sendPdfEmail({
         recipients: sendEmail,
         pdfBuffer,
         pdfUrl: url,
         fileName: `${templateId}_${new Date().toISOString().split('T')[0]}.pdf`
       });
+      await (perf ? perf.span('email', emailP) : emailP());
     }
 
     return {
@@ -225,18 +237,28 @@ export class PdfService {
     ]).catch(() => undefined);
   }
 
-  private async generatePdfFromHtml(html: string): Promise<Buffer> {
-    const browser = await this.getBrowser();
+  private async generatePdfFromHtml(html: string, perf?: PerfTrace): Promise<Buffer> {
+    const reused = !!(browserInstance && browserInstance.isConnected());
+    perf?.flag('browserReused', reused);
+    const browser = perf
+      ? await perf.span('browser', () => this.getBrowser())
+      : await this.getBrowser();
 
     const page = await browser.newPage();
     try {
       // 'load' (not 'networkidle0') — fire once the document + its referenced
       // resources are in, instead of waiting an extra 500ms quiet window for
       // the network to go fully idle. Fonts are then bounded by waitForFonts.
-      await page.setContent(html, { waitUntil: 'load' });
-      await page.emulateMediaType('screen');
-      await PdfService.waitForFonts(page);
+      const setContentP = async () => {
+        await page.setContent(html, { waitUntil: 'load' });
+        await page.emulateMediaType('screen');
+      };
+      await (perf ? perf.span('setContent', setContentP) : setContentP());
+      await (perf
+        ? perf.span('fontWait', () => PdfService.waitForFonts(page))
+        : PdfService.waitForFonts(page));
 
+      const printStart = Date.now();
       const pdfBuffer = await page.pdf({
         format: 'A4',
         preferCSSPageSize: true,
@@ -248,6 +270,7 @@ export class PdfService {
           left: '0'
         }
       });
+      perf?.flag('pdfPrintMs', Date.now() - printStart);
 
       return Buffer.from(pdfBuffer);
     } finally {
@@ -344,11 +367,12 @@ export class PdfService {
   }
 
   /** Resolve a stored Theme into render-ready values (logo → data URI). */
-  private async resolveTheme(theme?: Theme): Promise<ResolvedTheme | undefined> {
+  private async resolveTheme(theme?: Theme, perf?: PerfTrace): Promise<ResolvedTheme | undefined> {
     if (!theme) return undefined;
     let logoDataUri: string | null = null;
     if (theme.logoKey) {
       const cached = logoCache.get(theme.logoKey);
+      perf?.flag('logoCacheHit', !!cached);
       if (cached) {
         logoDataUri = cached;
       } else {
@@ -382,9 +406,11 @@ export class PdfService {
     userId: string,
     templateId: string,
     contentVersion: string,
+    perf?: PerfTrace,
   ): Promise<TemplateDelegate> {
     const cacheKey = `${userId}:${templateId}:${contentVersion}`;
     const cached = templateCache.get(cacheKey);
+    perf?.flag('templateCacheHit', !!cached);
     if (cached) return cached;
 
     const templateKey = `${userId}/templates/${templateId}.hbs`;
