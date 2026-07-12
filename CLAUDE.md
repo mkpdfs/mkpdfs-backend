@@ -62,12 +62,25 @@ gets `grantDualAuth` (TOKENS_TABLE RW for `lastUsed`) PLUS its JWT sibling's gra
 `mkp templates … --api-key`. Token mint/revoke stays JWT-only (no privilege escalation); token
 scopes deferred.
 
-#### MCP server — `POST /v1/mcp` (API-key only, added 2026-07-03)
+#### MCP server — `POST /v1/mcp` (API-key only; built 2026-07-03, actually SHIPPED 2026-07-11)
+
+History gotcha: the feature sat on the `mcp-server` branch and was only ever deployed to dev
+manually — subsequent dev pushes clobbered it while the landing already advertised the
+endpoint. Merged + released (dev & prod) 2026-07-11.
 
 Exposes `generate_pdf` + template CRUD (`list_templates`, `get_template`, `upload_template`,
-`update_template`, `delete_template`) as [MCP](https://modelcontextprotocol.io) tools, so
-external services/agents can drive mkpdfs the same way the CLI does headlessly. Same posture
-as `/v1/pdf/generate` and `/v1/templates/*`: no Gateway authorizer, `x-api-key: tlfy_*` only.
+`update_template`, `delete_template`) **plus `get_authoring_guide`** as
+[MCP](https://modelcontextprotocol.io) tools, so external services/agents can drive mkpdfs
+the same way the CLI does headlessly. Same posture as `/v1/pdf/generate` and
+`/v1/templates/*`: no Gateway authorizer, `x-api-key: tlfy_*` only.
+
+Agent-onboarding layer (`src/functions/mcp/authoringGuide.ts`): the server sends compact
+`instructions` on initialize (template format primer) and `get_authoring_guide` returns the
+full walkthrough — format, exact helper signatures, worked example — ported from the CLI's
+embedded `mkp instructions --agent`. **Keep helper signatures in sync with `pdfService.ts`
+and with `mkpdfs-cli/internal/cli/instr_format.md`.** Rationale: a real agent connected to
+the bare CRUD tools and concluded templates "couldn't be parameterized" — the format
+knowledge must travel with the server.
 
 Each tool call builds a synthetic `APIGatewayProxyEvent` and invokes the matching `*ApiKey`
 handler's exported `main` **in-process** (`src/functions/mcp/tools.ts` +
