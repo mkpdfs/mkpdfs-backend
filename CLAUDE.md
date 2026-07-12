@@ -162,7 +162,8 @@ What's done:
 - **Usage read removed from PDF routes**: `subscriptionMiddleware({ readUsage: false })` on generate/generateApiKey (usage is stats-only; consumers that need `event.currentUsage` — aiLimits, getProfile — keep the default).
 - **`lastUsed` write throttled**: API-token activity refreshes at most once/hour (display metadata, not audit) — one DDB write less per api-key request.
 - **Bundles minified, no shipped sourcemaps** (+ dropped `--enable-source-maps`): smaller ZIPs, faster cold start. Tradeoff: minified stack traces.
-- Deferred from the review: Puppeteer 24.x bump to the Chrome-143 range (needs its own visual-regression pass), lazy per-fontKey font loading, Lambda power tuning (use the new `[perf]` data), async usage bookkeeping.
+- **Puppeteer aligned with the Chromium 143 layer** (2026-07-12): puppeteer-core pinned to `24.35.0` — the LAST release supporting Chrome 143 (24.36+ targets 144; never cross without publishing a new layer). Verified with a pixel-level regression: the 9 mp-cert templates rendered on dev before/after were raster-identical (0 differing pixels).
+- Still deferred from the review: lazy per-fontKey font loading, Lambda power tuning (use the new `[perf]` data), async usage bookkeeping.
 
 Possible improvements (deferred — discuss at scale):
 - **Output cache**: hash `userId+templateId+contentVersion+data+theme+logoKey+today` → reuse the S3 PDF on a cache hit (skip render). Only helps repeat traffic; net-cheaper than rendering. Include `today` because system params (`{{today/now/year}}`) make output date-dependent.
