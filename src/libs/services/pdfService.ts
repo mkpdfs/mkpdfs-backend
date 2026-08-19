@@ -13,6 +13,7 @@ import { FONT_FACE_CSS, DEFAULT_FONT_FACE_CSS } from '../theme/generated/fontFac
 import { injectIntoHead } from '../theme/injectTheme';
 import { buildSystemParams, SystemParams } from '../systemParams';
 import { PerfTrace } from '../perf';
+import { normalizePdfBytes } from './pdfDeterminism';
 import qrcode from 'qrcode-generator';
 
 const s3Client = new S3Client({});
@@ -272,7 +273,19 @@ export class PdfService {
       });
       perf?.flag('pdfPrintMs', Date.now() - printStart);
 
-      return Buffer.from(pdfBuffer);
+      // Deterministic bytes: Chromium stamps wall-clock /CreationDate and
+      // /ModDate into the Info dict, so identical content otherwise hashes
+      // differently on every render. normalizePdfBytes rewrites just those
+      // digits in place (same length, every other byte untouched) and returns
+      // the ORIGINAL buffer on any anomaly — a render never fails because of it.
+      const normalizeStart = Date.now();
+      const normalized = normalizePdfBytes(Buffer.from(pdfBuffer));
+      perf?.flag('pdfNormalizeMs', Date.now() - normalizeStart);
+      if (normalized.reason) {
+        console.warn('[pdfService] PDF metadata not normalized, returning original bytes:', normalized.reason);
+      }
+
+      return normalized.buffer;
     } finally {
       await page.close(); // Close page, not browser (for reuse)
     }
