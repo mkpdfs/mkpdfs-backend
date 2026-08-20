@@ -275,14 +275,22 @@ export class PdfService {
 
       // Deterministic bytes: Chromium stamps wall-clock /CreationDate and
       // /ModDate into the Info dict, so identical content otherwise hashes
-      // differently on every render. normalizePdfBytes rewrites just those
-      // digits in place (same length, every other byte untouched) and returns
-      // the ORIGINAL buffer on any anomaly — a render never fails because of it.
+      // differently on every render. normalizePdfBytes rewrites just those two
+      // literals in place (same length, every other byte untouched).
+      //
+      // This is the ONLY call site the contract covers: bytes straight out of
+      // `page.pdf()`, before signing/encryption/post-processing. `reason` means
+      // the bytes did not match the known Skia shape and NOTHING was rewritten
+      // — a contract failure to investigate, not a soft warning. The original
+      // buffer is returned either way, so a render never fails because of it.
       const normalizeStart = Date.now();
       const normalized = normalizePdfBytes(Buffer.from(pdfBuffer));
       perf?.flag('pdfNormalizeMs', Date.now() - normalizeStart);
       if (normalized.reason) {
-        console.warn('[pdfService] PDF metadata not normalized, returning original bytes:', normalized.reason);
+        console.warn(
+          '[pdfService] determinism contract NOT met — bytes left un-normalized (hash will vary between renders):',
+          normalized.reason,
+        );
       }
 
       return normalized.buffer;

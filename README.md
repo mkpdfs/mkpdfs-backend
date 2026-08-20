@@ -97,6 +97,36 @@ curl -X POST https://apis.mkpdfs.com/pdf/generate \
   }'
 ```
 
+## Deterministic PDF bytes
+
+The same template + the same data produce the **same bytes**, so a stored PDF can be verified with a
+plain `sha256` instead of being rasterised and compared visually. Chromium stamps a wall-clock
+`/CreationDate` and `/ModDate` into every PDF it prints; `normalizePdfBytes`
+(`src/libs/services/pdfDeterminism.ts`) rewrites just those two literals in place — same byte
+length, so every cross-reference offset stays valid and **every other byte is preserved bit for
+bit**.
+
+**Scope of the guarantee — read before reusing this helper.** It is not a general-purpose PDF
+rewriter. It applies to exactly one input:
+
+> the bytes just returned by `page.pdf()` from the approved Chromium/Skia layer, **before** any
+> signing, encryption, linearisation, incremental update or other post-processing.
+
+Anything else is treated as a **contract failure**, not as a best-effort case. The original buffer
+is returned untouched with a specific reason and the API logs
+`[pdfService] determinism contract NOT met`. In particular the helper refuses to touch a file that
+is encrypted (`/Encrypt`), digitally signed (`/Sig`, `/ByteRange`), carries incremental updates
+(more than one `startxref`/`%%EOF` — editing a superseded revision damages the document's semantics
+even though it still opens), or carries XMP `/Metadata` (a second copy of the dates). It also
+refuses anything whose `/Info` dictionary is not exactly Skia's shape: the two date keys must be
+present exactly once each, as direct entries, with a complete `(D:YYYYMMDDHHmmSS<tz>)` literal and a
+recognised time-zone suffix. `patched` is only ever `0` or `2` — a partial normalisation never
+happens silently.
+
+`/Producer` is intentionally left alone: it carries the Chromium milestone, so upgrading the
+rendering layer *does* change the hash — which is correct, because the raster can change with it.
+Re-baseline stored hashes after a Chromium bump.
+
 ## Async PDF Generation (Job API)
 
 For large or complex PDFs that may timeout with synchronous generation, use the async job API. Jobs are processed via SQS with automatic retries and optional webhook notifications.
