@@ -85,7 +85,9 @@ export class ApiStack extends cdk.Stack {
     // deliberately does NOT create/overwrite AWS::ApiGateway::Account.
     const accessLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
       logGroupName: `/aws/apigateway/mkpdfs-api-${env}/access`,
-      retention: logs.RetentionDays.THREE_MONTHS,
+      // 14 days to keep storage cheap: the dashboard keeps its own 31-day
+      // 5xx history in S3 (endpoints/v1.json) and only rereads the last hour.
+      retention: logs.RetentionDays.TWO_WEEKS,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
