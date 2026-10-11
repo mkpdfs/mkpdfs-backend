@@ -3,6 +3,7 @@ import { Duration } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import {
@@ -57,6 +58,13 @@ export function createServiceFunction(
     layers: props.layers,
     reservedConcurrentExecutions: props.reservedConcurrentExecutions,
     description: props.description,
+    // Retention for /aws/lambda/<fn> (observability#56). Those groups were
+    // auto-created by Lambda on first invoke, OUTSIDE CloudFormation, so an
+    // explicit `logGroup` would either collide with the existing name or
+    // move logging to a new group. `logRetention` (Custom::LogRetention)
+    // calls PutRetentionPolicy on the existing group (creating it if the fn
+    // was never invoked), keeps it on removal and never replaces the fn.
+    logRetention: logs.RetentionDays.THREE_MONTHS,
     projectRoot: REPO_ROOT,
     depsLockFilePath: path.join(REPO_ROOT, 'package-lock.json'),
     bundling: {
