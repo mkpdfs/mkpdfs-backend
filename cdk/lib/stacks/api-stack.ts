@@ -4,6 +4,7 @@ import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -77,11 +78,44 @@ export class ApiStack extends cdk.Stack {
       "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'";
     const corsMethods = "'OPTIONS,GET,POST,PUT,DELETE,PATCH'";
 
+    // Access logs (observability#56): one JSON line per request, field names
+    // fixed by the observability dashboard ("rest-json" format). The account
+    // already has an API Gateway CloudWatch role (shared account, owned by
+    // another project) and cdk.json sets disableCloudWatchRole, so this stack
+    // deliberately does NOT create/overwrite AWS::ApiGateway::Account.
+    const accessLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
+      logGroupName: `/aws/apigateway/mkpdfs-api-${env}/access`,
+      // 14 days to keep storage cheap: the dashboard keeps its own 31-day
+      // 5xx history in S3 (endpoints/v1.json) and only rereads the last hour.
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
     this.api = new apigateway.RestApi(this, 'Api', {
       restApiName: `mkpdfs-api-${env}`,
       description: `mkpdfs API (${env}) — CDK`,
       endpointConfiguration: { types: [apigateway.EndpointType.REGIONAL] },
-      deployOptions: { stageName: env }, // must match the base path mapping stage
+      deployOptions: {
+        stageName: env, // must match the base path mapping stage
+        accessLogDestination: new apigateway.LogGroupLogDestination(accessLogGroup),
+        accessLogFormat: apigateway.AccessLogFormat.custom(
+          JSON.stringify({
+            requestId: '$context.requestId',
+            ip: '$context.identity.sourceIp',
+            requestTime: '$context.requestTime',
+            httpMethod: '$context.httpMethod',
+            resourcePath: '$context.resourcePath',
+            path: '$context.path',
+            status: '$context.status',
+            protocol: '$context.protocol',
+            responseLength: '$context.responseLength',
+            responseLatency: '$context.responseLatency',
+            integrationLatency: '$context.integrationLatency',
+            errorMessage: '$context.error.message',
+            userAgent: '$context.identity.userAgent',
+          }),
+        ),
+      },
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowHeaders: [
