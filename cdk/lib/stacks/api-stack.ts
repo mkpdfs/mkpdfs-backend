@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as eventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -422,6 +424,36 @@ export class ApiStack extends cdk.Stack {
     );
     generatePdfAsync.grantInvoke(generatePdfApiKey);
     addRoute('/v1/pdf/generate', 'POST', generatePdfApiKey, false);
+
+    // Keep-warm (obra#3909): Chromium is launched lazily inside the handler,
+    // so a recycled container makes the next /v1/pdf/generate pay Lambda init
+    // + Chromium launch (~3 s measured on dev, 2026-11-05). Lambda recycles
+    // idle containers after ~5 min, so a 4-min direct invoke keeps one warm.
+    // The handler answers this exact event BEFORE its middleware chain
+    // (src/libs/warmup.ts): no auth, no credits, no data written. Direct
+    // invoke, not API Gateway, so it never shows in the access logs or
+    // usage. Rollback = remove this rule.
+    // Lambda's own async queue retries twice and keeps events for 6 h by
+    // default; the warmer is this function's ONLY async caller (API Gateway
+    // and MCP are synchronous), so bound it too: a stale warm queued behind a
+    // throttled function would only steal capacity from real renders.
+    generatePdfApiKey.configureAsyncInvoke({
+      retryAttempts: 0,
+      maxEventAge: cdk.Duration.minutes(2),
+    });
+    new events.Rule(this, 'GeneratePdfApiKeyWarmer', {
+      description: `Keep GeneratePdfApiKeyFn warm (Chromium) - ${env} (obra#3909)`,
+      schedule: events.Schedule.rate(cdk.Duration.minutes(4)),
+      targets: [
+        new eventsTargets.LambdaFunction(generatePdfApiKey, {
+          // MUST equal WARMUP_EVENT in src/libs/warmup.ts
+          event: events.RuleTargetInput.fromObject({ warmup: true, source: 'mkpdfs.warmer' }),
+          // A missed warm is harmless; never queue stale warms behind a busy fn.
+          retryAttempts: 0,
+          maxEventAge: cdk.Duration.minutes(2),
+        }),
+      ],
+    });
 
     // =================================================================
     // MCP (API-key only) — thin adapter over the /v1/* routes above.
