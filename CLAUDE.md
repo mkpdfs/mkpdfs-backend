@@ -174,40 +174,75 @@ Possible improvements (deferred — discuss at scale):
 - **Do NOT** cache the DynamoDB template row: its `contentVersion` IS the Handlebars-cache invalidation key, and `invalidateTemplateCache` has no external callers — a TTL row cache would serve stale templates after edits.
 - **Gotcha**: `scripts/generate-thumbnails.ts` does not register `mkpdfsLogo` (despite the "MUST stay identical" comment) — regenerating thumbnails for logo-using templates throws `Missing helper: "mkpdfsLogo"`.
 
-#### Deterministic PDF bytes (2026-08-19)
+#### Deterministic PDF bytes (2026-08-19, contract narrowed 2026-08-20)
 
 Same content in ⇒ same bytes out. `src/libs/services/pdfDeterminism.ts` (`normalizePdfBytes`)
 runs on every `page.pdf()` result inside `generatePdfFromHtml`, so consumers can verify a stored
 PDF with a plain `sha256` instead of rasterising it.
+
+**The contract is narrow and it is the point.** The claim is NOT "works on arbitrary PDFs". It is:
+
+> works on the bytes that the approved Chromium/Skia layer just returned from `page.pdf()`,
+> BEFORE any signing, encryption, linearisation, incremental update or other post-processing.
+
+Anything outside that shape is a **contract failure**, not a best-effort case: the original buffer
+comes back untouched with a specific `reason`, and `pdfService` logs
+`[pdfService] determinism contract NOT met`. `generatePdfFromHtml` is the only call site the
+contract covers — do not reach for this helper on PDFs that came from anywhere else.
 
 - **What actually varied**: `/CreationDate` and `/ModDate` in the plain-text Info object — and
   nothing else. Measured empirically on Chromium **127 and 152**, five real templates (single
   page, 12-page array, self-hosted webfonts, embedded raster logo, inline SVG QR) plus a 75-page
   6.8 MB stress file: every pair of runs differed in exactly those two 14-digit stamps. Skia emits
   no `/ID`, no XMP `/Metadata`, deterministic font resource names and deterministic Flate streams.
-- **How**: the 14 digits are overwritten in place with `FIXED_PDF_DATE` (`20000101000000`). Same
-  length by construction ⇒ every xref offset stays valid and **every other byte is preserved bit
-  for bit**. The Info dict is walked with a tiny tokenizer that skips literal/hex strings, so a
-  date-looking sequence inside a user-controlled `/Title` can never be rewritten. A full pdf-lib
-  load+save was rejected: it re-serialises the whole document — built from arbitrary customer
-  HTML — for no gain over a ≤28-byte edit.
+- **How**: the date literal is overwritten in place with `FIXED_PDF_DATE` (`20000101000000`) plus a
+  canonical time-zone suffix of **exactly the same byte length** ⇒ every xref offset stays valid
+  and **every other byte is preserved bit for bit**. A full pdf-lib load+save was rejected: it
+  re-serialises the whole document — built from arbitrary customer HTML — for no gain over a
+  ~28-byte edit.
+- **What the parser now demands** (all of it, or nothing is written):
+  - one unambiguous `/Info N 0 R` reference and exactly one `N 0 obj … endobj` defining it, shaped
+    exactly `<< … >>` with nothing but white-space before `endobj`;
+  - `/CreationDate` and `/ModDate` each present **exactly once**, as **direct** entries of that
+    dictionary. The dict is parsed key/value alternating and recursively, so a date key nested in a
+    sub-dictionary or inside an array (`date-key-nested`), or one sitting in a *value* position, or
+    one inside a user-controlled `/Title` string, is never mistaken for a real entry;
+  - no `/CreationDate` or `/ModDate` anywhere else in the file (`date-key-outside-info`) — a second
+    copy would keep the bytes varying;
+  - each value a complete, closed literal `(D:YYYYMMDDHHmmSS<tz>)`: 14 digits with plausible
+    fields, a **recognised** time-zone suffix (`` · `Z` · `Z00'00'` · `±HH'mm'` · `±HH'mm` ·
+    `±HH'` · `±HH`), and `)` immediately after. The suffix is normalised too — patching only the
+    digits would leave an offset that varies with the host time zone.
+- **Structures it refuses outright** (original returned, reason logged): `/Encrypt` (`encrypted`);
+  `/Sig`, `/ByteRange`, `/SigFlags`, `/DocMDP` (`digitally-signed` — an in-place edit invalidates
+  the signature); more than one `startxref`/`%%EOF` (`incremental-update` — bytes of a superseded
+  revision are still referenced by that revision's xref, so editing them damages the file's
+  semantics even though it still opens); `/Metadata` (`xmp-metadata` — XMP carries its own copy of
+  the dates and is often Flate-compressed, so we cannot even tell). Those markers are ignored when
+  they appear *inside* the Info object's customer-controlled strings; the parsed Info keys are
+  checked separately (`out-of-contract-key-in-info`).
+- **All-or-nothing**: `patched` is only ever `0` or `2`. A partial normalisation is a
+  `contract-violation:…` failure, never a silent success.
 - **`/Producer` is deliberately NOT normalised.** It carries the Chromium milestone
   (`Skia/PDF m143`), so bumping the layer changes the hash — which is correct, because the raster
   can change with it. Downstream verifiers should re-baseline on a Chromium bump.
-- **Fail-safe**: `normalizePdfBytes` never throws and never changes length; on any anomaly
-  (not a PDF, `/Info` inside an object stream, odd date shape, unexpected byte moved) it returns
-  the ORIGINAL buffer and `pdfService` logs `[pdfService] PDF metadata not normalized`. A render
-  can never fail because of it. Post-write invariant: segmented `Buffer.compare` proves only the
-  intended digits moved.
+  *Follow-up on the identity model (product decision, deliberately not implemented):* `/Producer`
+  is a coarse signal — it invalidates every stored hash globally on a milestone bump even when the
+  render is byte-identical, and it does not distinguish two different builds inside one milestone.
+  The cleaner shape is to split the concerns: an `artifact_sha256` over fully normalised bytes
+  (dates **and** `/Producer`) plus an explicit `renderer_fingerprint` stored beside it.
+- **Fail-safe**: `normalizePdfBytes` never throws and never changes length. Post-write invariant:
+  segmented `Buffer.compare` proves only the intended spans moved.
 - **Cost**: median **0.10 ms** on a typical 0.2–0.3 MB PDF, **2.3 ms** on a 6.8 MB / 75-page one
   (< 0.5 % of render time); transient memory = one buffer copy. Timed as `pdfNormalizeMs` in the
   `[perf]` line.
 - **Render-unchanged proof**: 11 real PDFs compared before/after with obra's
   `scripts/pdf-golden/content-comparator.mjs` (page count, exact MediaBox/CropBox via pdf-lib,
   canonical `pdftotext`, and per-page raw RGB sha256 at 150 dpi via `pdftoppm`) — all identical.
-- **Tests**: `pdfDeterminism.test.ts`, incl. a committed pair of REAL Chromium 152 renders of the
-  same HTML (`__fixtures__/chromium-run-{a,b}.pdf`) that hash differently raw and identically
-  after normalisation — so CI keeps the guarantee honest without needing a browser.
+- **Tests**: `pdfDeterminism.test.ts` (40), incl. a committed pair of REAL Chromium 152 renders of
+  the same HTML (`__fixtures__/chromium-run-{a,b}.pdf`) that hash differently raw and identically
+  after normalisation — so CI keeps the guarantee honest without needing a browser. Every guard
+  above was mutation-verified: disabling it makes at least one test fail.
 
 ### Database Schema (DynamoDB)
 

@@ -2,8 +2,11 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as eventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNode from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -77,11 +80,44 @@ export class ApiStack extends cdk.Stack {
       "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'";
     const corsMethods = "'OPTIONS,GET,POST,PUT,DELETE,PATCH'";
 
+    // Access logs (observability#56): one JSON line per request, field names
+    // fixed by the observability dashboard ("rest-json" format). The account
+    // already has an API Gateway CloudWatch role (shared account, owned by
+    // another project) and cdk.json sets disableCloudWatchRole, so this stack
+    // deliberately does NOT create/overwrite AWS::ApiGateway::Account.
+    const accessLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
+      logGroupName: `/aws/apigateway/mkpdfs-api-${env}/access`,
+      // 14 days to keep storage cheap: the dashboard keeps its own 31-day
+      // 5xx history in S3 (endpoints/v1.json) and only rereads the last hour.
+      retention: logs.RetentionDays.TWO_WEEKS,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
     this.api = new apigateway.RestApi(this, 'Api', {
       restApiName: `mkpdfs-api-${env}`,
       description: `mkpdfs API (${env}) — CDK`,
       endpointConfiguration: { types: [apigateway.EndpointType.REGIONAL] },
-      deployOptions: { stageName: env }, // must match the base path mapping stage
+      deployOptions: {
+        stageName: env, // must match the base path mapping stage
+        accessLogDestination: new apigateway.LogGroupLogDestination(accessLogGroup),
+        accessLogFormat: apigateway.AccessLogFormat.custom(
+          JSON.stringify({
+            requestId: '$context.requestId',
+            ip: '$context.identity.sourceIp',
+            requestTime: '$context.requestTime',
+            httpMethod: '$context.httpMethod',
+            resourcePath: '$context.resourcePath',
+            path: '$context.path',
+            status: '$context.status',
+            protocol: '$context.protocol',
+            responseLength: '$context.responseLength',
+            responseLatency: '$context.responseLatency',
+            integrationLatency: '$context.integrationLatency',
+            errorMessage: '$context.error.message',
+            userAgent: '$context.identity.userAgent',
+          }),
+        ),
+      },
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowHeaders: [
@@ -388,6 +424,36 @@ export class ApiStack extends cdk.Stack {
     );
     generatePdfAsync.grantInvoke(generatePdfApiKey);
     addRoute('/v1/pdf/generate', 'POST', generatePdfApiKey, false);
+
+    // Keep-warm (obra#3909): Chromium is launched lazily inside the handler,
+    // so a recycled container makes the next /v1/pdf/generate pay Lambda init
+    // + Chromium launch (~3 s measured on dev, 2026-11-05). Lambda recycles
+    // idle containers after ~5 min, so a 4-min direct invoke keeps one warm.
+    // The handler answers this exact event BEFORE its middleware chain
+    // (src/libs/warmup.ts): no auth, no credits, no data written. Direct
+    // invoke, not API Gateway, so it never shows in the access logs or
+    // usage. Rollback = remove this rule.
+    // Lambda's own async queue retries twice and keeps events for 6 h by
+    // default; the warmer is this function's ONLY async caller (API Gateway
+    // and MCP are synchronous), so bound it too: a stale warm queued behind a
+    // throttled function would only steal capacity from real renders.
+    generatePdfApiKey.configureAsyncInvoke({
+      retryAttempts: 0,
+      maxEventAge: cdk.Duration.minutes(2),
+    });
+    new events.Rule(this, 'GeneratePdfApiKeyWarmer', {
+      description: `Keep GeneratePdfApiKeyFn warm (Chromium) - ${env} (obra#3909)`,
+      schedule: events.Schedule.rate(cdk.Duration.minutes(4)),
+      targets: [
+        new eventsTargets.LambdaFunction(generatePdfApiKey, {
+          // MUST equal WARMUP_EVENT in src/libs/warmup.ts
+          event: events.RuleTargetInput.fromObject({ warmup: true, source: 'mkpdfs.warmer' }),
+          // A missed warm is harmless; never queue stale warms behind a busy fn.
+          retryAttempts: 0,
+          maxEventAge: cdk.Duration.minutes(2),
+        }),
+      ],
+    });
 
     // =================================================================
     // MCP (API-key only) — thin adapter over the /v1/* routes above.
