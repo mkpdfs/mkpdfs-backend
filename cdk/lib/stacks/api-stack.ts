@@ -433,6 +433,14 @@ export class ApiStack extends cdk.Stack {
     // (src/libs/warmup.ts): no auth, no credits, no data written. Direct
     // invoke, not API Gateway, so it never shows in the access logs or
     // usage. Rollback = remove this rule.
+    // Lambda's own async queue retries twice and keeps events for 6 h by
+    // default; the warmer is this function's ONLY async caller (API Gateway
+    // and MCP are synchronous), so bound it too: a stale warm queued behind a
+    // throttled function would only steal capacity from real renders.
+    generatePdfApiKey.configureAsyncInvoke({
+      retryAttempts: 0,
+      maxEventAge: cdk.Duration.minutes(2),
+    });
     new events.Rule(this, 'GeneratePdfApiKeyWarmer', {
       description: `Keep GeneratePdfApiKeyFn warm (Chromium) - ${env} (obra#3909)`,
       schedule: events.Schedule.rate(cdk.Duration.minutes(4)),

@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const order: string[] = [];
 const m = vi.hoisted(() => ({
   warmup: vi.fn(),
   generatePdf: vi.fn(),
@@ -63,7 +64,16 @@ describe('generateApiKey handler — scheduled warmer (obra#3909)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     m.warmup.mockResolvedValue({ browserReused: false, browserMs: 1700, renderMs: 40 });
-    m.generatePdf.mockResolvedValue({ statusCode: 200, body: '{"pdfUrl":"https://x.invalid/a.pdf"}' });
+    m.generatePdf.mockImplementation(async () => {
+      order.push('generatePdf');
+      return { statusCode: 200, body: '{"pdfUrl":"https://x.invalid/a.pdf"}' };
+    });
+    order.length = 0;
+    m.auth.mockImplementation(async () => void order.push('auth'));
+    m.subscription.mockImplementation(async () => void order.push('subscription'));
+    m.creditGate.mockImplementation(async () => void order.push('creditGate'));
+    m.usage.mockImplementation(async () => void order.push('usage'));
+    m.debit.mockImplementation(async () => void order.push('debit'));
   });
 
   it('answers the warmer event without auth, credits, usage or PDF generation', async () => {
@@ -103,6 +113,8 @@ describe('generateApiKey handler — scheduled warmer (obra#3909)', () => {
     expect(m.generatePdf).toHaveBeenCalledTimes(1);
     expect(m.debit).toHaveBeenCalledTimes(1);
     expect(m.warmup).not.toHaveBeenCalled();
+    // middy runs `after` hooks in reverse registration order: debit, then usage.
+    expect(order).toEqual(['auth', 'subscription', 'creditGate', 'generatePdf', 'debit', 'usage']);
   });
 
   it('the CDK rule sends exactly WARMUP_EVENT', () => {
@@ -115,5 +127,16 @@ describe('generateApiKey handler — scheduled warmer (obra#3909)', () => {
     // eslint-disable-next-line no-new-func
     const sent = new Function(`return (${match![1]});`)();
     expect(sent).toEqual({ ...WARMUP_EVENT });
+  });
+
+  it('the function itself never retries or queues stale async warms', () => {
+    const stack = readFileSync(
+      path.resolve(__dirname, '../../../../cdk/lib/stacks/api-stack.ts'),
+      'utf8',
+    );
+    const asyncCfg = stack.match(/generatePdfApiKey\.configureAsyncInvoke\(\{([^}]*)\}\)/);
+    expect(asyncCfg).not.toBeNull();
+    expect(asyncCfg![1]).toMatch(/retryAttempts:\s*0\b/);
+    expect(asyncCfg![1]).toMatch(/maxEventAge:\s*cdk\.Duration\.minutes\(2\)/);
   });
 });
