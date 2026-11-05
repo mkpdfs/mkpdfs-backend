@@ -326,6 +326,32 @@ export class PdfService {
   }
 
   /**
+   * Keep-warm path for the scheduled warmer (obra#3909). Launches (or reuses)
+   * the module-scope Chromium and prints a tiny in-memory page so the next
+   * real request on this container skips the Chromium launch and the first
+   * page/print setup. Touches NOTHING else: no template, no S3, no DynamoDB,
+   * no email, no credits — the bytes are discarded.
+   */
+  async warmup(): Promise<{ browserReused: boolean; browserMs: number; renderMs: number }> {
+    const browserReused = !!(browserInstance && browserInstance.isConnected());
+    const browserStart = Date.now();
+    const browser = await this.getBrowser();
+    const browserMs = Date.now() - browserStart;
+
+    const renderStart = Date.now();
+    const page = await browser.newPage();
+    try {
+      await page.setContent('<!doctype html><html><body><p>warmup</p></body></html>', {
+        waitUntil: 'load',
+      });
+      await page.pdf({ format: 'A4', printBackground: true });
+    } finally {
+      await page.close();
+    }
+    return { browserReused, browserMs, renderMs: Date.now() - renderStart };
+  }
+
+  /**
    * Get or create a reusable browser instance.
    * Browser is reused across warm Lambda invocations for better performance.
    */

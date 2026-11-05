@@ -73,6 +73,17 @@ export class PerfTrace {
   }
 }
 
+/**
+ * Called by the scheduled warmer (src/libs/warmup.ts): the warmer paid this
+ * container's cold start, so the first REAL request served by it must report
+ * coldStart: false. Returns whether the container was still cold.
+ */
+export function consumeColdStart(): boolean {
+  const wasCold = containerIsCold;
+  containerIsCold = false;
+  return wasCold;
+}
+
 /** Fetch the trace the auth middleware attached to the event (if any). */
 export function perfOf(event: any): PerfTrace | undefined {
   return event?.__perf instanceof PerfTrace ? event.__perf : undefined;
